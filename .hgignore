@@ -1,0 +1,9 @@
+syntax: glob
+
+*.pyc
+*.pyo
+*.swp
+*.cache
+.idea/*
+.project
+.pydevproject
