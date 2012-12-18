@@ -40,14 +40,11 @@ class HollowKRPC_Responder(object):
 
 class DeferredGrabber(object):
     """
-    Wrap over sendQuery, recording its arguments/results in a dictionary
-
-    The dictionary is keyed by transaction id
-    ie: self.deferreds[transaction_id] == (query, deferred)
+    Wrap over sendQuery, recording its arguments/results
     """
     def __init__(self, sendQuery):
         self.sendQuery = sendQuery
-        self.deferreds = list()
+        self.deferreds = []
     
     def __call__(self, query, address, timeout=None):
         deferred = self.sendQuery(query, address, timeout)
