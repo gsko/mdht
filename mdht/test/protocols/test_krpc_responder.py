@@ -7,18 +7,9 @@ from mdht.krpc_types import Query, Response
 from mdht.protocols import krpc_responder, krpc_sender
 from mdht.protocols.krpc_responder import KRPC_Responder, _TokenGenerator
 from mdht.test.utils import HollowReactor, HollowTransport
+from mdht.test.utils import Clock
 
 monkey_patcher = MonkeyPatcher()
-
-class Clock(object):
-    def __init__(self):
-        self._time = 0
-
-    def set(self, time):
-        self._time = time
-
-    def time(self):
-        return self._time
 
 class SendResponseWrapper(object):
     def __init__(self, sendResponse):
