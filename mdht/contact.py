@@ -1,7 +1,7 @@
 """
 @author Greg Skoczek
 
-Objects used to encapsulate and manipulate the identity of BitTorrent DHT nodes
+Objects used to encapsulate the identity of DHT nodes
 
 """
 import time
@@ -14,7 +14,7 @@ from mdht import constants
 
 class Node(object):
     """
-    Encapsulate the notion of a BitTorrent DHT node
+    Encapsulate a BitTorrent DHT node
 
     Each DHT node has a unique (to the network) node_id and an ipv4
     address. This class further keeps track of node statistics
