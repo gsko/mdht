@@ -176,8 +176,11 @@ class KRPC_Sender(protocol.DatagramProtocol):
 
     implements(IKRPC_Sender)
 
-    def __init__(self, routing_table_class, node_id):
-        self._reactor = reactor
+    def __init__(self, routing_table_class, node_id, _reactor=None):
+        # If the user doesn't specify a reactor, we will use
+        # one from twisted.internet
+        if _reactor is None:
+            self._reactor = reactor
         self.node_id = long(node_id)
         self._transactions = dict()
         self.routing_table = routing_table_class(self.node_id)

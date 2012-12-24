@@ -34,6 +34,15 @@ class IKRPC_Iterator(IKRPC_Responder):
     KRPC_Iterator abstracts the practice of iterating toward a target ID
 
     """
+    def __init__(self, node_id=None):
+        """
+        Construct a KRPC_Iterator
+
+        @arg node_id: The ID under which this KRPC_Iterator
+            will contact the network
+
+        """
+
     def find_iterate(self, target_id, nodes=None, timeout=None):
         """
         Run a find_node query on every node in a list and return the new nodes
@@ -85,6 +94,9 @@ class IKRPC_Iterator(IKRPC_Responder):
 class KRPC_Iterator(KRPC_Responder):
 
     implements(IKRPC_Iterator)
+
+    def __init__(self, node_id=None, _reactor=None):
+        KRPC_Responder.__init__(self, node_id=node_id, _reactor=_reactor)
 
     def find_iterate(self, target_id, nodes=None, timeout=None):
         # find_iterate returns only nodes
