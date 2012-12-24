@@ -53,6 +53,20 @@ class DeferredGrabber(object):
         return deferred
 
 class KRPC_Iterator_TestCase(unittest.TestCase):
+    # TODO
+    # 
+    # This inheritance and patching pattern is messy, complex,
+    # and doesn't make for maintainable code.
+    #
+    # Refactor it so that KRPC_Sender has a single reactor
+    # reference bound within its constructor (at definition time
+    # as a default argument). This way, you can simply just pass
+    # in a hollow reactor instead of hacking it in
+    #
+    # What about KRPC_Responder and KRPC_Iterator?
+    #   - A pass through argument that floats up through
+    #       the constructors
+    # TODO
     def setUp(self):
         self.monkey_patcher = MonkeyPatcher()
         self.monkey_patcher.addPatch(krpc_sender, "reactor", HollowReactor())

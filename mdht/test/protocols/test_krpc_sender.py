@@ -156,9 +156,6 @@ class KRPC_Sender_DeferredTestCase(unittest.TestCase):
         self.assertFalse(self.query._transaction_id in
                          self.k_messenger._transactions)
 
-    def _neutralize_invalidKRPCError(self, failure):
-        failure.trap(krpc_coder.InvalidKRPCError)
-
     def test_errback_InvalidKRPCError(self):
         # Make an invalid query
         query = Query()
@@ -166,24 +163,17 @@ class KRPC_Sender_DeferredTestCase(unittest.TestCase):
         d = self.k_messenger.sendQuery(query, address, timeout)
         self.assertFalse(self.query._transaction_id in
                          self.k_messenger._transactions)
-        counter = Counter()
-        d.addErrback(self._neutralize_invalidKRPCError)
-        d.addErrback(counter)
-        self.assertEquals(0, counter.count)
 
-    def _neutralize_TimeoutError(self, failure):
-        failure.trap(TimeoutError)
+        # Cleanup the error
+        d.addErrback(lambda failure: failure.trap(krpc_coder.InvalidKRPCError))
 
     def test_errback_TimeoutError(self):
-        counter = Counter()
         d = self.k_messenger.sendQuery(self.query, address, timeout)
         self.assertTrue(self.query._transaction_id in
                         self.k_messenger._transactions)
         d.errback(TimeoutError())
-        d.addErrback(self._neutralize_TimeoutError)
-        d.addErrback(counter)
-        self.assertEquals(0, counter.count)
         self.assertFalse(self.query._transaction_id in
                          self.k_messenger._transactions)
 
-
+        # Cleanup the error
+        d.addErrback(lambda failure: failure.trap(TimeoutError))

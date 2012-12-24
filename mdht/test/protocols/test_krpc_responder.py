@@ -4,10 +4,9 @@ from twisted.python.monkey import MonkeyPatcher
 from mdht import constants, contact
 from mdht.coding import krpc_coder
 from mdht.krpc_types import Query, Response
-from mdht.protocols import krpc_responder, krpc_sender
-from mdht.protocols.krpc_responder import KRPC_Responder, _TokenGenerator
-from mdht.test.utils import HollowReactor, HollowTransport
-from mdht.test.utils import Clock
+from mdht.protocols import krpc_responder
+from mdht.protocols.krpc_responder import _TokenGenerator, KRPC_Responder
+from mdht.test.utils import HollowReactor, HollowTransport, Clock
 
 monkey_patcher = MonkeyPatcher()
 
@@ -20,24 +19,18 @@ class SendResponseWrapper(object):
         self.response = response
         self.address = address
 
+class Patched_KRPC_Responder(KRPC_Responder):
+    def __init__(self, node_id=None):
+        # Patch in our testing goodies
+        KRPC_Responder.__init__(self, node_id=node_id, _reactor=HollowReactor())
+        self.transport = HollowTransport()
+        self.sendResponse = SendResponseWrapper(self.sendResponse)
+
 test_address = ("127.0.0.1", 8888)
 
 class KRPC_ResponderTestCase(unittest.TestCase):
-    def setUp(self):
-        monkey_patcher.addPatch(krpc_sender, "reactor", HollowReactor())
-        monkey_patcher.patch()
-
-    def tearDown(self):
-        monkey_patcher.restore()
-
-    def _patched_responder(self, node_id=None):
-        kresponder = KRPC_Responder(node_id=node_id)
-        kresponder.transport = HollowTransport()
-        kresponder.sendResponse = SendResponseWrapper(kresponder.sendResponse)
-        return kresponder
-
     def test_ping_Received_sendsValidResponse(self):
-        kresponder = self._patched_responder()
+        kresponder = Patched_KRPC_Responder()
         incoming_query = Query()
         incoming_query.rpctype = "ping"
         incoming_query._from = 123
@@ -54,7 +47,7 @@ class KRPC_ResponderTestCase(unittest.TestCase):
     def test_find_node_Received_sendsValidResponseMultipleNodes(self):
         # Create the protocol and populate its
         # routing table with nodes
-        kresponder = self._patched_responder()
+        kresponder = Patched_KRPC_Responder()
         node_list = []
         node_gen = lambda num: contact.Node(num, ("127.0.0.%d" % num, num))
         for i in range(100):
@@ -91,7 +84,7 @@ class KRPC_ResponderTestCase(unittest.TestCase):
         target_id = 76
         our_id = target_id - 1
 
-        kresponder = self._patched_responder(our_id)
+        kresponder = Patched_KRPC_Responder(node_id=our_id)
         node_list = []
         node_gen = lambda num: contact.Node(num, ("127.0.0.%d" % num, num))
         for i in range(100):
@@ -133,7 +126,7 @@ class KRPC_ResponderTestCase(unittest.TestCase):
         target_id = 76
         our_id = target_id - 1
 
-        kresponder = self._patched_responder(our_id)
+        kresponder = Patched_KRPC_Responder(node_id=our_id)
         node_list = []
         node_gen = lambda num: contact.Node(num, ("127.0.0.%d" % num, num))
         for i in range(100):
@@ -180,7 +173,7 @@ class KRPC_ResponderTestCase(unittest.TestCase):
     def test_get_peers_Received_sendsValidResponseWithPeers(self):
         # Create the protocol and populate its
         # routing table with nodes
-        kresponder = self._patched_responder()
+        kresponder = Patched_KRPC_Responder()
         peers = [("127.0.0.%d" % peer_num, peer_num) for
                                         peer_num in range(10)]
         incoming_query = Query()
@@ -214,7 +207,7 @@ class KRPC_ResponderTestCase(unittest.TestCase):
         self.assertEquals(expected_response, actual_response)
 
     def test_announce_peer_Received_sendsValidResponse(self):
-        kresponder = self._patched_responder()
+        kresponder = Patched_KRPC_Responder()
         # announce_peer queries need a token (the token value
         # comes in response to a get_peers query)
         # So first, we need to "receive" a get_peers query
@@ -250,7 +243,7 @@ class KRPC_ResponderTestCase(unittest.TestCase):
         self.assertEquals(expected_response, actual_response)
 
     def test_announce_peer_Received_validTokenAddsPeer(self):
-        kresponder = self._patched_responder()
+        kresponder = Patched_KRPC_Responder()
         # announce_peer queries need a token (the token value
         # comes in response to a get_peers query)
         # So first, we need to "receive" a get_peers query
@@ -301,7 +294,7 @@ class KRPC_ResponderTestCase(unittest.TestCase):
         self.assertEquals((test_ip, incoming_query.port), returned_peer)
 
     def test_announce_peer_Received_invalidTokenDoesntAddPeer(self):
-        kresponder = self._patched_responder()
+        kresponder = Patched_KRPC_Responder()
         # announce_peer queries need a token (the token value
         # comes in response to a get_peers query)
         # So first, we need to "receive" a get_peers query
