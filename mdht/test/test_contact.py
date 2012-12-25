@@ -49,7 +49,6 @@ class NodeTestCase(unittest.TestCase):
         self.assertFalse(n1.better_than(n2))
         self.assertFalse(n2.better_than(n1))
 
-
     def test_better_than_oneFreshOneOld(self):
         self.clock.set(0)
         n_old = contact.Node(2**1, ("127.0.0.1", 1111))
@@ -57,6 +56,7 @@ class NodeTestCase(unittest.TestCase):
         self.clock.set(constants.node_timeout + 1)
         n_fresh.successful_query(10)
         self.assertTrue(n_fresh.better_than(n_old))
+        self.assertFalse(n_old.better_than(n_fresh))
 
     def test_better_than_oneBetterRTT(self):
         self.clock.set(0)
@@ -66,13 +66,9 @@ class NodeTestCase(unittest.TestCase):
         n_slow.successful_query(0)
         n_fast.successful_query(5)
         self.assertTrue(n_fast.better_than(n_slow))
+        self.assertFalse(n_slow.better_than(n_fast))
 
 class NodeCodingTestCase(unittest.TestCase):
-    def setUp(self):
-        encode = basic_coder.encode_address
-        decode = basic_coder.decode_address
-        self.encode_and_decode = lambda address: decode(encode(address))
-
     def test_address_str(self):
         address = ("127.0.0.1", 80)
         expected_str = "ip=127.0.0.1 port=80"
