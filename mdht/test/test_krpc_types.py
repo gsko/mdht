@@ -21,23 +21,23 @@ class QueryTestCase(unittest.TestCase):
         self.q.rpctype = "ping"
 
     def test_build_response(self):
-        nodes = []
+        nodes = None
         token = 8192
-        peers = [" "]
+        peers = None
         r = self.q.build_response(nodes, token, peers)
-        self.assertEquals(self.q._transaction_id, r._transaction_id)
-        self.assertEquals(self.q.rpctype, r.rpctype)
-        self.assertEquals(nodes, r.nodes)
-        self.assertEquals(token, r.token)
-        self.assertEquals(peers, r.peers)
+        q = self.q
+        expected_r = Response(_transaction_id=q._transaction_id,
+                rpctype=q.rpctype, nodes=nodes, token=token, peers=peers)
+        self.assertEquals(expected_r, r)
 
     def test_build_error(self):
         code = 203
         message = "Oops, error"
         e = self.q.build_error(code, message)
-        self.assertEquals(self.q._transaction_id, e._transaction_id)
-        self.assertEquals(code, e.code)
-        self.assertEquals(message, e.message)
+        q = self.q
+        expected_e = Error(_transaction_id=q._transaction_id,
+                code=code, message=message)
+        self.assertEquals(expected_e, e)
 
     def test_repr(self):
         expected_repr = "<Query: _transaction_id=500 rpctype=ping _from=27>"

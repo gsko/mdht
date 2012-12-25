@@ -12,8 +12,8 @@ class _KRPC(object):
     _transaction_id: the transaction ID of this message
 
     """
-    def __init__(self):
-        self._transaction_id = None
+    def __init__(self, _transaction_id=None):
+        self._transaction_id = _transaction_id
 
     def __repr__(self):
         raise NotImplemented()
@@ -60,13 +60,14 @@ class Query(_KRPC):
     port: the port that the announcing peer will be listening on
 
     """
-    def __init__(self):
-        _KRPC.__init__(self)
-        self.rpctype = None
-        self._from = None
-        self.target_id = None
-        self.token = None
-        self.port = None
+    def __init__(self, _transaction_id=None, rpctype=None,
+            _from=None, target_id=None, token=None, port=None):
+        _KRPC.__init__(self, _transaction_id=None)
+        self.rpctype = rpctype
+        self._from = _from
+        self.target_id = target_id
+        self.token = token
+        self.port = port
 
     def build_response(self, nodes=None, token=None, peers=None):
         """
@@ -121,13 +122,14 @@ class Response(_KRPC):
     _from: the node that received the original query
 
     """
-    def __init__(self):
-        _KRPC.__init__(self)
-        self._from = None
-        self.nodes = None
-        self.token = None
-        self.peers = None
-        self.rpctype = None
+    def __init__(self, _transaction_id=None, _from=None,
+            nodes=None, token=None, peers=None, rpctype=None):
+        _KRPC.__init__(self, _transaction_id=_transaction_id)
+        self._from = _from
+        self.nodes = nodes
+        self.token = token
+        self.peers = peers 
+        self.rpctype = rpctype 
 
     def __repr__(self):
         printable_attributes = self._get_attrs()
@@ -146,16 +148,16 @@ class Error(_KRPC):
     message: the message associated with this error
 
     """
-    def __init__(self):
-        _KRPC.__init__(self)
-        self.code = None
-        self.message = None
+    def __init__(self, _transaction_id=None, code=None, message=None):
+        _KRPC.__init__(self, _transaction_id=_transaction_id)
+        self.code = code
+        self.message = message
     
     def __repr__(self):
         printable_attributes = ['_transaction_id', 'rpctype', 'code']
         message_string = "message='%s'" % self.message
         return "<Error: %s %s>" % (
-                self._build_repr(printable_attributes),
+                    self._build_repr(printable_attributes),
                 message_string
                 )
 
