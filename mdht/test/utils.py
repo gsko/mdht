@@ -104,3 +104,7 @@ class HollowDelayedCall(object):
 class HollowReactor(object):
     def callLater(self, timeout, function, *args, **kwargs):
         return HollowDelayedCall()
+
+    def listenUDP(self, port, protocol):
+        pass
+
