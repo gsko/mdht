@@ -56,7 +56,7 @@ failcount_threshold = 3
 #closeness_threshold = 130
 
 # Bootstrap node
-bootstrap_nodes = [("127.0.0.1", 2323),
+bootstrap_addresses = [("127.0.0.1", 2323),
                    ("67.18.187.143", 1337),
                    ("dht.transmissionbt.com", 6881),
                    ("router.utorrent.com", 6881)]
