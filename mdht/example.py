@@ -1,5 +1,3 @@
-from twisted.internet import reactor
-
 from mdht.run import MDHT
 from mdht.constants import bootstrap_addresses
 
