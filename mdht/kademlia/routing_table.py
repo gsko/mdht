@@ -89,8 +89,6 @@ class TreeRoutingTable(object):
         self.active_kbuckets = [k]
 
     def offer_node(self, node):
-        # If node isn't in the routing table,
-        # try adding it
         if node.node_id in self.nodes_dict:
             return True
         else:

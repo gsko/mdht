@@ -8,139 +8,15 @@ import random
 import hashlib
 
 from collections import deque, defaultdict
-from zope.interface import implements, Interface
 from twisted.python import log
-from twisted.python.components import proxyForInterface
 
 from mdht import constants, contact
 from mdht.coding import basic_coder
 from mdht.krpc_types import Query
-from mdht.protocols.krpc_sender import KRPC_Sender, IKRPC_Sender
+from mdht.protocols.krpc_sender import KRPC_Sender
 from mdht.kademlia.routing_table import TreeRoutingTable
 
-class IKRPC_Responder(IKRPC_Sender):
-    """
-    KRPC_Sender with better query handling and responses to incoming queries
-
-    This protocol extension forms responses to incoming
-    queries with compliance to the BEP 005 specification
-    
-    """
-
-    def __init__(self, routing_table_class=TreeRoutingTable, node_id=None):
-        """Specify a routing table and node_id to anchor this protocol"""
-
-    def ping_Received(self, query, address):
-        """
-        This method is called when a ping Query has been received.
-
-        Override this method if you want to handle incoming ping queries.
-        This implementation responds with a valid ping Response.
-
-        @param query: the ping query that has been received (this query
-                      has a .rpctype of "ping")
-        @address: the address from which this query originated
-        @see DHTBot/references/README for the DHT specification
-
-        """
-
-    def find_node_Received(self, query, address):
-        """
-        This method is called when a find_node Query has been received.
-
-        Override this method if you want to handle incoming find_node
-        queries. This implementation responds with a valid find_node Response
-
-        @param query: the find_node query that has been received (this
-                      query has a .rpctpe of "find_node")
-        @address: the address from which this query originated
-        @see DHTBot/references/README for the DHT specification
-
-        """
-
-    def get_peers_Received(self, query, address):
-        """
-        This method is called when a get_peers Query has been received.
-
-        Override this method if you want to handle incoming get_peers 
-        queries. This implementation responds with a valid get_peers Response
-
-        @param query: the get_peers query that has been received (this
-                      query has a .rpctpe of "get_peers")
-        @address: the address from which this query originated
-        @see DHTBot/references/README for the DHT specification
-
-        """
-
-    def announce_peer_Received(self, query, address):
-        """
-        This method is called when a announce_peer Query has been received.
-
-        Override this method if you want to handle incoming announce_peer 
-        queries. This implementation responds with a valid
-        announce_peer Response
-
-        @param query: the announce_peer query that has been received (this
-                      query has a .rpctpe of "announce_peer")
-        @address: the address from which this query originated
-        @see DHTBot/references/README for the DHT specification
-
-        """
-
-    def ping(self, address, timeout=None):
-        """
-        Send a ping query to the given address
-
-        @param address, timeout: @see the arguments in
-            mdht.protocols.krpc_sender.KRPC_Sender.sendQuery
-        @returns a Deferred
-
-        """
-
-    def find_node(self, address, node_id, timeout=None):
-        """
-        Send a find_node query to the given address
-
-        @param node_id: the id of the node we are trying to find
-        @param address, timeout: @see the arguments in
-            mdht.protocols.krpc_sender.KRPC_Sender.sendQuery
-        @returns a Deferred
-
-        """
-
-    def get_peers(self, address, target_id, timeout=None):
-        """
-        Send a get_peers query to the given address
-
-        @param target_id: the infohash for which we are trying to get peers
-        @param address, timeout: @see the arguments in
-            mdht.protocols.krpc_sender.KRPC_Sender.sendQuery
-        @returns a Deferred
-
-        """
-
-    def announce_peer(self, address, target_id, token, port, timeout=None):
-        """
-        Send an announce_peer query to the given address
-
-        @param target_id: the infohash of the content that this
-            DHT node is performing a put/announce on
-        @param token: the token used to validate this announce_peer
-            query. This token should have been returned in a response
-            to a recent get_peers query
-        @param port: the port on this host on which to announce
-            that there is a BitTorrent peer sharing the content
-            identified by target_id
-        @param address, timeout: @see the arguments in
-            mdht.protocols.krpc_sender.KRPC_Sender.sendQuery
-        @returns a Deferred
-
-        """
-
 class KRPC_Responder(KRPC_Sender):
-
-    implements(IKRPC_Responder)
-
     def __init__(self,
             routing_table_class=TreeRoutingTable,
             node_id=None,
@@ -248,7 +124,7 @@ class _TokenGenerator(object):
     with a secret that changes every constants._secret_timeout seconds
 
     """
-    def __init__(self, hash_constructor=hashlib.sha1):
+    def __init__(self, hash_constructor=hashlib.sha512):
         """Use the specified hash constructor for hashing"""
         self.hash_constructor = hash_constructor
         num_secrets = constants.token_timeout / constants._secret_timeout

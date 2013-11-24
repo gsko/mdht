@@ -1,7 +1,3 @@
-#
-# Author: Greg Skoczek
-#
-
 # k as used in Kademlia
 k = 8
 

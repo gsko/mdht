@@ -12,31 +12,31 @@ from socket import inet_aton, inet_ntoa
 from mdht.coding import basic_coder
 from mdht import constants
 
+def encode_node(node):
+    """
+    Encodes the given node into a network string
+
+    The format of the network string is specified in the
+    BitTorrent DHT extension specification
+
+    @see DHTBot/references/README for the DHT BEP
+
+    """
+    return "%s%s" % (basic_coder.encode_network_id(node.node_id),
+                     basic_coder.encode_address(node.address))
+
+def decode_node(node_string):
+    """
+    Decodes a network string into a Node object
+
+    @see encode_node for the format of this network string
+
+    """
+    node_id = basic_coder.decode_network_id(node_string[:20])
+    address = basic_coder.decode_address(node_string[20:])
+    return Node(node_id, address)
+
 class Node(object):
-    """
-    Encapsulate a BitTorrent DHT node
-
-    Each DHT node has a unique (to the network) node_id and an ipv4
-    address. This class further keeps track of node statistics
-    such as whether this node is considered to be fresh (active, sending
-    valid queries and responses) and whether this node is better than
-    another node (in terms of average rtt, freshness, etc.) Statistics
-    are collected when the successful_query and failed_query
-    methods are called
-
-    @param node_id: Unique network ID (@see references/kademlia.pdf)
-                    This id must be in the range of
-                        0 <= node_id < 2**160
-    @param address: Network address of this node (ipv4 tuple)
-    last_updated:   The last time this node has been updated (number of
-                    seconds since the unix epoch : float)
-    totalrtt:       The total return trip time delay of every query
-                    including successful and failed
-    successcount:   The number of queries to which this node has responded
-    failcount:      The number of queries to which this node has failed
-                    (either by sending an Error, or by timing out)
-
-    """
     def __init__(self, node_id, address):
         # Verify the node_id and address are in the proper format
         basic_coder.encode_address(address)
@@ -51,14 +51,6 @@ class Node(object):
         self.failcount = 0
 
     def distance(self, node_id):
-        """
-        Compute the distance from this node to the id provided
-        
-        This distance is used to determine a DHT node's closeness
-        to another node or to a data identifier (such as an infohash
-        of a torrent file found in the network)
-        
-        """
         return node_id ^ self.node_id
 
     def successful_query(self, origin_time):
@@ -103,15 +95,11 @@ class Node(object):
         """
         current_time = time.time()
         age = current_time - self.last_updated
-        return age <= constants.node_timeout
+        return age < constants.node_timeout
 
     def better_than(self, other_node):
         """
         Tells whether this node is preferable to the other_node
-
-        The node that is fresh and has a lower rtt will be selected
-        @returns boolean
-
         """
         if self.fresh() and not other_node.fresh():
             return True
@@ -120,11 +108,6 @@ class Node(object):
         if self.fresh() and better_rtt:
             return True
 
-        # Notion of: "good node" vs "bad node"
-        # is a function of:
-        #               RTT (done)
-        #               Time of last update (done)
-        #               Number of good queries vs. bad queries
         return False
 
     def _rtt(self):
@@ -162,33 +145,9 @@ class Node(object):
                 self.failcount)
 
     def __str__(self):
-        return "node: id=%d address=%s" % (self.node_id,
-                                           address_str(self.address))
+        return "node: id=(%d) address=(%s)" % (
+            self.node_id, address_str(self.address))
 
 def address_str(address):
-    """Creates a string representation of an ipv4 address tuple (ip, port)"""
     return "ip=%s port=%d" % address
 
-def encode_node(node):
-    """
-    Encodes the given node into a network string
-
-    The format of the network string is specified in the
-    BitTorrent DHT extension specification
-
-    @see DHTBot/references/README for the DHT BEP
-
-    """
-    return "%s%s" % (basic_coder.encode_network_id(node.node_id),
-                     basic_coder.encode_address(node.address))
-
-def decode_node(node_string):
-    """
-    Decodes a network string into a Node object
-
-    @see encode_node for the format of this network string
-
-    """
-    node_id = basic_coder.decode_network_id(node_string[:20])
-    address = basic_coder.decode_address(node_string[20:])
-    return Node(node_id, address)

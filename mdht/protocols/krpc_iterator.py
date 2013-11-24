@@ -7,7 +7,7 @@ Module containing an iterative KRPC protocol along with auxilary classes
 from zope.interface import implements
 from twisted.internet import defer
 
-from mdht.protocols.krpc_responder import KRPC_Responder, IKRPC_Responder
+from mdht.protocols.krpc_responder import KRPC_Responder
 from mdht.protocols.errors import TimeoutError, KRPCError
 
 class IterationError(Exception):
@@ -29,72 +29,7 @@ class IterationError(Exception):
         self.reason = reason
 
 
-class IKRPC_Iterator(IKRPC_Responder):
-    """
-    KRPC_Iterator abstracts the practice of iterating toward a target ID
-
-    """
-    def __init__(self, node_id=None):
-        """
-        Construct a KRPC_Iterator
-
-        @arg node_id: The ID under which this KRPC_Iterator
-            will contact the network
-
-        """
-
-    def find_iterate(self, target_id, nodes=None, timeout=None):
-        """
-        Run a find_node query on every node in a list and return the new nodes
-
-        This function will send a find_node query to a collection of nodes.
-        After all queries have either returned a response or timed out,
-        all newly found nodes and peers will be returned in a
-        deferred callback. If nodes are supplied as an argument,
-        no nodes will be taken from the routing table.
-
-        @param nodes: the nodes to start the iteration from (if no nodes
-            are provided, nodes will be taken from the routing table)
-            This should be an iterable.
-        @param timeout: @see the arguments to KRPC_Responder.timeout
-        @returns a deferred that fires its callback with a set of
-            all newly discovered nodes. The errback is fired with
-            an IterationError if an error occurs in the iteration process.
-
-        @see IterationError
-
-        """
-
-    def get_iterate(self, target_id, nodes=None, timeout=None):
-        """
-        Run a get_peers query on every node in a list and return new nodes/peers
-
-        This function will send a get_peers query to a collection of nodes.
-        After all queries have either returned a response or timed out,
-        all newly found nodes and peers will be returned in a
-        deferred callback. If nodes are supplied as an argument,
-        no nodes will be taken from the routing table.
-
-        @param nodes: the nodes to start the iteration from (if no nodes
-            are provided, nodes will be taken from the routing table)
-            This should be an iterable.
-        @param timeout: @see the arguments to KRPC_Responder.timeout
-        @returns a deferred that fires its callback with a tuple (peers, nodes)
-            where
-                peers: a set of all newly discovered peers (if any)
-                nodes: a set of all newly discovered nodes (if the queried
-                    node did not have any peers, it returns nodes instead)
-            The errback is fired with an IterationError if an error occurs
-            in the iteration process.
-
-        @see IterationError
-
-        """
-
 class KRPC_Iterator(KRPC_Responder):
-
-    implements(IKRPC_Iterator)
-
     def __init__(self, node_id=None, _reactor=None):
         KRPC_Responder.__init__(self, node_id=node_id, _reactor=_reactor)
 

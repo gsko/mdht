@@ -1,6 +1,4 @@
 """
-@author Greg Skoczek
-
 Module encapsulating all the errors that occur
 within the krpc sending/receiving process
 
