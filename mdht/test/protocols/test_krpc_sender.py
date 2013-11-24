@@ -114,9 +114,9 @@ class KRPC_Sender_DeferredTestCase(unittest.TestCase):
 
     def _response_equality(self, response, expected_response):
             self.assertEquals(expected_response._transaction_id,
-                              response._transaction_id)
+                response._transaction_id)
             self.assertEquals(expected_response._from,
-                              response._from)
+                response._from)
             return response
 
     def test_callback(self):

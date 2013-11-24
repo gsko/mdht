@@ -45,23 +45,6 @@ class KRPC_Iterator(KRPC_Responder):
         return d
 
     def _iterate(self, iterate_func, target_id, nodes=None, timeout=None):
-        """
-        Perform one iteration towards the target_id
-
-        @param iterate_func: the function used to iterate towards the
-            target id. This function is either get_peers or find_node
-            as found on KRPC_Responder
-        @returns a deferred which fires the callback with a tuple
-            (nodes, peers), where
-                peers: all the new peers that have been discovered
-                    (if the iterate_func is get_peers)
-                nodes: all the new nodes that been discovered
-            The errback is fired with an IterationError if an
-            error occurs in the iteration
-
-        @see IterationError
-
-        """
         # Prepare the seed nodes
         if nodes is None:
             # If no nodes are supplied, we have to
