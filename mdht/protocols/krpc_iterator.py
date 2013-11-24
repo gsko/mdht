@@ -4,7 +4,6 @@
 Module containing an iterative KRPC protocol along with auxilary classes
 
 """
-from zope.interface import implements
 from twisted.internet import defer
 
 from mdht.protocols.krpc_responder import KRPC_Responder

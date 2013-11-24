@@ -1,0 +1,4 @@
+#!/usr/bin/zsh
+
+find . -name "*pyc" -exec rm '{}' \;
+find . -regextype egrep -regex '.*_trial_temp.*' -exec rm -rv '{}' \;
