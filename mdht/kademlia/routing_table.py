@@ -1,6 +1,4 @@
 """
-@author Greg Skoczek
-
 Implementation of a RoutingTable for the Kademlia network
 @see references/kademlia.pdf section 2.4
 @see references/README for the DHT BEP005

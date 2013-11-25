@@ -1,9 +1,3 @@
-"""
-@author Greg Skoczek
-
-Module containing an iterative KRPC protocol along with auxilary classes
-
-"""
 from twisted.internet import defer
 
 from mdht.protocols.krpc_responder import KRPC_Responder
@@ -11,20 +5,12 @@ from mdht.protocols.errors import TimeoutError, KRPCError
 
 class IterationError(Exception):
     """
-    Error indicating a fault has occured in the KRPC_Iterator
-
     Possible reasons for this can be:
         * There are no nodes in the routing table and no nodes
             were provided as arguments into the iterator
         * All outbound queries timed out
-
-    The reason can be accessed as a string in the 'reason' attribute
-
     """
     def __init__(self, reason):
-        """
-        @param reason: a string describing the interation error
-        """
         self.reason = reason
 
 
