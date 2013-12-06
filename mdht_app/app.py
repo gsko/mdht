@@ -11,5 +11,3 @@ mdht_service = internet.UDPServer(config.SERVER_PORT, protocol)
 mdht_service.setServiceParent(application)
 
 log.msg('%s running on localhost:%d', config.SERVER_PORT)
-
-class 
