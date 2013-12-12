@@ -8,9 +8,9 @@ from twisted.python.components import proxyForInterface
 from twisted.internet.interfaces import IUDPTransport
 
 from mdht import constants, contact
-from mdht.kademlia import routing_table
 from mdht.coding import krpc_coder
 from mdht.coding.krpc_coder import InvalidKRPCError
+from mdht.kademlia import routing_table
 from mdht.krpc_types import Query, Response, Error
 from mdht.transaction import Transaction
 from mdht.protocols.errors import TimeoutError, KRPCError 
@@ -75,46 +75,33 @@ class KRPC_Sender(protocol.DatagramProtocol):
         self.transport.write(encoded_packet, address)
 
     def sendQuery(self, query, address, timeout):
-        # Fill in the "from" field of the query
         query._from = self.node_id
         query._transaction_id = self._generate_transaction_id()
-        # Try to send the krpc, there is an encoding error
-        # immediately return the error to the user 
         try:
             self.sendKRPC(query, address)
         except InvalidKRPCError as encoding_error:
             return defer.fail(encoding_error)
 
-        # Record this transaction so that later the original
-        # query may be referenced when a response/error is received
         t = Transaction()
         t.query = query
         t.address = address
         t.deferred = defer.Deferred()
-        # Handle successful responses / errors
-        # (supply the address and transaction for extra processing)
-        t.deferred.addCallback(self._query_success_callback, address, t)
-        t.deferred.addErrback(self._query_failure_errback, address, t)
-        # Set up a timeout during which this transaction
-        # has to complete (ie: receive a response or error)
-        t.timeout_call = self._reactor.callLater(constants.rpctimeout,
-                                t.deferred.errback, TimeoutError())
-        # Store this transaction
+        t.deferred.addCallback(self._query_success, address, t)
+        t.deferred.addErrback(self._query_failure, address, t)
+        t.timeout_call = self._reactor.callLater(
+            constants.rpctimeout, t.deferred.errback, TimeoutError())
         self._transactions[query._transaction_id] = t
-        # Add a callback that removes this transaction
-        # after it has been processed
-        t.deferred.addBoth(self._remove_transaction_bothback, t)
+        t.deferred.addBoth(self._remove_transaction, t)
         return t.deferred
 
     def sendResponse(self, response, address):
-        # Fill out the "from" field on the response before sending
         response._from = self.node_id
         self.sendKRPC(response, address)
 
     def sendError(self, error, address):
         self.sendKRPC(error, address)
 
-    def _query_success_callback(self, response, address, transaction):
+    def _query_success(self, response, address, transaction):
         """
         Handle a valid Response to an outstanding Query
 
@@ -133,7 +120,7 @@ class KRPC_Sender(protocol.DatagramProtocol):
         # Pass the response further down the callback chain
         return response
 
-    def _query_failure_errback(self, failure, address, transaction):
+    def _query_failure(self, failure, address, transaction):
         """
         Handle exceptions encountered while waiting for a Response
 
@@ -162,7 +149,7 @@ class KRPC_Sender(protocol.DatagramProtocol):
 
         return failure
 
-    def _remove_transaction_bothback(self, result, transaction):
+    def _remove_transaction(self, result, transaction):
         """
         Callback/errback that removes an outstanding transaction
 

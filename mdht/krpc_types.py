@@ -103,8 +103,6 @@ class Query(_KRPC):
         printable_attributes = self._get_attrs()
         return "<Query: %s>" % self._build_repr(printable_attributes)
 
-    # TODO check if there is a way to
-    # programmaticaly get this list (dir() + function filtering)
     def _get_attrs(self):
         return ('_transaction_id', 'rpctype', 
                 '_from', 'target_id', 'token', 'port')
@@ -135,7 +133,6 @@ class Response(_KRPC):
         printable_attributes = self._get_attrs()
         return "<Response: %s>" % self._build_repr(printable_attributes)
 
-    # TODO see if we can replace these with a function (in Query too)
     def _get_attrs(self):
         return ('_transaction_id', '_from',
                     'nodes', 'token', 'peers', 'rpctype')
@@ -143,10 +140,6 @@ class Response(_KRPC):
 class Error(_KRPC):
     """
     An Error signifies that a query failed (for a variety of reasons)
-
-    code: the error code of this error
-    message: the message associated with this error
-
     """
     def __init__(self, _transaction_id=None, code=None, message=None):
         _KRPC.__init__(self, _transaction_id=_transaction_id)

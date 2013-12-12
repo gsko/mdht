@@ -85,21 +85,18 @@ class KRPC_Responder(KRPC_Sender):
             log.msg("Invalid token/query/querier combination in"
                     " announce_peerReceived")
 
-    def ping(self, address, timeout=None):
-        timeout = timeout or constants.rpctimeout
+    def ping(self, address, timeout=constants.rpctimeout):
         query = Query()
         query.rpctype = "ping"
         return self.sendQuery(query, address, timeout)
 
-    def find_node(self, address, node_id, timeout=None):
-        timeout = timeout or constants.rpctimeout
+    def find_node(self, address, node_id, timeout=constants.rpctimeout):
         query = Query()
         query.rpctype = "find_node"
         query.target_id = node_id
         return self.sendQuery(query, address, timeout)
 
-    def get_peers(self, address, target_id, timeout=None):
-        timeout = timeout or constants.rpctimeout
+    def get_peers(self, address, target_id, timeout=constants.rpctimeout):
         query = Query()
         query.rpctype = "get_peers"
         query.target_id = target_id
