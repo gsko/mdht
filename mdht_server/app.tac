@@ -7,6 +7,7 @@ from twisted.application.internet import UDPServer, TCPServer
 from twisted.internet.protocol import Factory, Protocol
 from twisted.python import log
 from twisted.web import xmlrpc
+from twisted.internet import reactor
 
 from mdht.protocols.krpc_iterator import KRPC_Iterator
 from mdht_server import config
@@ -19,14 +20,20 @@ kad_server = UDPServer(config.SERVER_PORT, kad_proto)
 kad_server.setServiceParent(app)
 
 class RPC(xmlrpc.XMLRPC):
+
+    allowNone = True
+    useDateTime = True
+
     def __init__(self, kad_proto):
         self.kad_proto = kad_proto
 
-    def xmlrpc_ping(self, ip_port):
-        ip, port = ip_port.split(":")
-        address = ip, port
-        d = self.kad_proto.ping(address)
-        d.addCallbacks(pickle.dumps, pickle.dumps)
+    def xmlrpc_ping(self, hostname_port):
+        hostname, port = hostname_port.split(":")
+        port = int(port)
+        d = reactor.resolve(hostname)
+        d.addCallback(lambda ip: (ip, port))
+        d.addCallback(self.kad_proto.ping)
+        d.addBoth(pickle.dumps)
         return d
 
 r = RPC(kad_proto)

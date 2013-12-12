@@ -4,13 +4,14 @@ import pickle
 from twisted.web.xmlrpc import Proxy
 from twisted.internet import reactor
 
-def _print(x, *a, **k): print x, a, k
+def _print(x):
+    print x
 
 if __name__ == "__main__":
     p = Proxy('http://localhost:5000')
     d = p.callRemote('ping', 'weezy.us:1337')
-    d.addCallbacks(_print, _print)
     d.addCallbacks(pickle.loads, pickle.loads)
     d.addCallbacks(_print, _print)
+    d.addBoth(lambda _ign: reactor.stop())
 
     reactor.run()
