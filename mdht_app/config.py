@@ -1,4 +1,0 @@
-
-APPLICATION_NAME = "mdht_app"
-SERVER_PORT = 7001
-PEERS_FILENAME = "peers"
