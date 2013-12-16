@@ -20,12 +20,10 @@ class RPCClient(object):
         reactor.stop()
 
     def ping(self, address_str):
-        print 'ping'
         log.msg('sending a kademlia ping to {0}'.format(address_str))
         return self._call('ping', address_str)
 
     def grab_nodes(self):
-        print 'grab_nodes'
         return self._call('grab_nodes')
 
     def _call(self, funcname, *args, **kwargs):
@@ -38,7 +36,7 @@ class RPCClient(object):
 if __name__ == "__main__":
     address_str = 'weezy.us:1337'
     rpc_client = RPCClient()
-    #rpc_client.ping(address_str)
+    rpc_client.ping(address_str)
     d = rpc_client.grab_nodes()
     d.addBoth(lambda _: rpc_client.stop_client())
 

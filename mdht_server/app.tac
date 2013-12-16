@@ -28,18 +28,28 @@ class RPC(xmlrpc.XMLRPC):
         self.kad_proto = kad_proto
 
     def xmlrpc_ping(self, hostname_port):
+        log.msg('received ping request for ({0})'.format(hostname_port))
         hostname, port = hostname_port.split(":")
         port = int(port)
         d = reactor.resolve(hostname)
         d.addCallback(lambda ip: (ip, port))
-        d.addCallback(self.kad_proto.ping)
-        d.addBoth(pickle.dumps)
+        d.addCallback(self._on_ping_reply)
+        d.addBoth(self._serialize)
         return d
 
+    def _on_ping_reply(self, ping_reply):
+        log.msg('received ping reply ({0}'.format(ping_reply))
+        return self._serialize(ping_reply)
+
     def xmlrpc_grab_nodes(self):
+        log.msg('received grab_nodes request')
         rt = self.kad_proto.routing_table
         nodes = rt.nodes_dict.values()
-        return pickle.dumps(nodes)
+        log.msg('replying to grab_nodes ({0})'.format(nodes))
+        return self._serialize(nodes)
+
+    def _serialize(self, val):
+        return pickle.dumps(val)
 
 r = RPC(kad_proto)
 rpc_server = TCPServer(5000, web.server.Site(r))
