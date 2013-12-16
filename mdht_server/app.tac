@@ -36,6 +36,11 @@ class RPC(xmlrpc.XMLRPC):
         d.addBoth(pickle.dumps)
         return d
 
+    def xmlrpc_grab_nodes(self):
+        rt = self.kad_proto.routing_table
+        nodes = rt.nodes_dict.values()
+        return pickle.dumps(nodes)
+
 r = RPC(kad_proto)
 rpc_server = TCPServer(5000, web.server.Site(r))
 rpc_server.setServiceParent(app)

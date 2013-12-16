@@ -3,15 +3,43 @@ import pickle
 
 from twisted.web.xmlrpc import Proxy
 from twisted.internet import reactor
+from twisted.python import log
 
 def _print(x):
     print x
+    return x
+
+class RPCClient(object):
+    def __init__(self):
+        self.proxy = Proxy('http://localhost:5000')
+
+    def start_client(self):
+        reactor.run()
+
+    def stop_client(self):
+        reactor.stop()
+
+    def ping(self, address_str):
+        print 'ping'
+        log.msg('sending a kademlia ping to {0}'.format(address_str))
+        return self._call('ping', address_str)
+
+    def grab_nodes(self):
+        print 'grab_nodes'
+        return self._call('grab_nodes')
+
+    def _call(self, funcname, *args, **kwargs):
+        d = self.proxy.callRemote(funcname, *args, **kwargs)
+        d.addBoth(pickle.loads)
+        d.addBoth(_print)
+        return d
+
 
 if __name__ == "__main__":
-    p = Proxy('http://localhost:5000')
-    d = p.callRemote('ping', 'weezy.us:1337')
-    d.addCallbacks(pickle.loads, pickle.loads)
-    d.addCallbacks(_print, _print)
-    d.addBoth(lambda _ign: reactor.stop())
+    address_str = 'weezy.us:1337'
+    rpc_client = RPCClient()
+    #rpc_client.ping(address_str)
+    d = rpc_client.grab_nodes()
+    d.addBoth(lambda _: rpc_client.stop_client())
 
-    reactor.run()
+    rpc_client.start_client()

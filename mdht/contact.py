@@ -45,6 +45,7 @@ class Node(object):
         self.node_id = node_id
         self.address = address
         # Statistical information
+        # TODO make this time format human readable
         self.last_updated = time.time()
         self.totalrtt = 0
         self.successcount = 0
@@ -145,7 +146,7 @@ class Node(object):
                 self.failcount)
 
     def __str__(self):
-        return "node: id=(%d) address=(%s)" % (
+        return "Node(id=%d, address=(%s))" % (
             self.node_id, address_str(self.address))
 
 def address_str(address):
