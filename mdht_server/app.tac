@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 import pickle
+import os
 
 from twisted import web
 from twisted.application import internet, service
@@ -27,20 +28,6 @@ class RPC(xmlrpc.XMLRPC):
     def __init__(self, kad_proto):
         self.kad_proto = kad_proto
 
-    def xmlrpc_ping(self, hostname_port):
-        log.msg('received ping request for ({0})'.format(hostname_port))
-        hostname, port = hostname_port.split(":")
-        port = int(port)
-        d = reactor.resolve(hostname)
-        d.addCallback(lambda ip: (ip, port))
-        d.addCallback(self._on_ping_reply)
-        d.addBoth(self._serialize)
-        return d
-
-    def _on_ping_reply(self, ping_reply):
-        log.msg('received ping reply ({0}'.format(ping_reply))
-        return self._serialize(ping_reply)
-
     def xmlrpc_grab_nodes(self):
         log.msg('received grab_nodes request')
         rt = self.kad_proto.routing_table
@@ -48,8 +35,74 @@ class RPC(xmlrpc.XMLRPC):
         log.msg('replying to grab_nodes ({0})'.format(nodes))
         return self._serialize(nodes)
 
+    def xmlrpc_ping(self, hostname_port):
+        log.msg('received ping request for ({0})'.format(hostname_port))
+        hostname, port = hostname_port.split(":")
+        port = int(port)
+        d = reactor.resolve(hostname)
+        d.addCallback(lambda ip: self.kad_proto.ping((ip, port)))
+        d.addCallbacks(self._on_ping_reply, self._on_ping_err)
+        d.addBoth(self._serialize)
+        return d
+
+    def xmlrpc_find_iterate(self, s_target_id, s_nodes):
+        nodes = self._deserialize(s_nodes)
+        target_id = self._deserialize(s_target_id)
+        log.msg('received find_iterate request towards ({0}) '
+            'with nodes ({1})'.format(target_id, nodes))
+        d = self.kad_proto.find_iterate(target_id, nodes)
+        d.addCallbacks(
+            self._on_find_iterate_reply, self._on_find_iterate_err)
+        d.addBoth(self._serialize)
+        return d
+
+    def _on_find_iterate_reply(self, reply):
+        log.msg('received find_iterate reply ({0})'.format(str(reply)))
+        return reply
+
+    def _on_find_iterate_err(self, err):
+        log.msg('find_iterate request processing caused an error ({0})'
+            .format(str(reply)))
+        return err 
+
+    def xmlrpc_find_node(self, hostname_port, s_node_id):
+        node_id = self._deserialize(s_node_id)
+        log.msg('received find_node request for {0} '
+            'with target node id of {1}'.format(hostname_port, node_id))
+        hostname, port = hostname_port.split(":")
+        port = int(port)
+        d = reactor.resolve(hostname)
+        d.addCallback(lambda ip:
+            self.kad_proto.find_node((ip, port), node_id))
+        d.addCallbacks(self._on_find_node_reply, self._on_find_node_err)
+        d.addBoth(self._serialize)
+        return d
+
+    def _on_find_node_reply(self, reply):
+        log.msg('received find_node reply ({0})'.format(str(reply)))
+        return reply
+
+    def _on_find_node_err(self, err):
+        log.err('find_node request processing caused an error ({0})'
+            .format(str(err)))
+        os.exit(1)
+        return err
+
+    def _on_ping_err(self, err):
+        log.err('ping request processing caused an error ({0})'
+            .format(str(err)))
+        os.exit(1)
+        return err
+
+    def _on_ping_reply(self, reply):
+        log.msg('received ping reply ({0})'.format(str(reply)))
+        return reply
+
     def _serialize(self, val):
         return pickle.dumps(val)
+
+    def _deserialize(self, serial_val):
+        return pickle.loads(serial_val)
 
 r = RPC(kad_proto)
 rpc_server = TCPServer(5000, web.server.Site(r))
