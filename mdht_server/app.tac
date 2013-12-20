@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
-import pickle
 import os
+import pickle
+import sys
 
 from twisted import web
 from twisted.application import internet, service
@@ -110,4 +111,5 @@ rpc_server.setServiceParent(app)
 
 application = app
 
+log.startLogging(sys.stdout)
 log.msg('%s running on localhost:%d', config.SERVER_PORT)
