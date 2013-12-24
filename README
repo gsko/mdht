@@ -2,7 +2,8 @@ Comments, questions, and patches welcome: gsk067@gmail.com
 
 Requirements
 ============
-Twisted (a newer version is probably better)
+* Python 2.7.x
+* Twisted (a newer version is probably better)
 
 What is mdht?
 =======================================================================
