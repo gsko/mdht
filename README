@@ -1,5 +1,9 @@
 Comments, questions, and patches welcome: gsk067@gmail.com
 
+Requirements
+------------
+Twisted (a newer version is probably better)
+
 What is mdht?
 -----------------------------------------------------------------------
 Status: (semi-stable) good unit tests, lacking functional tests
@@ -8,6 +12,10 @@ mdht is a library of kademlia protocols implemented with a twisted stack.
 mdht is designed to run on the current Mainline DHT of BitTorrent.
 (The protocol spec: http://www.bittorrent.org/beps/bep_0005.html)
 
+Unit tests
+..........
+On a shell with a proper PYTHONPATH, do: 'trial mdht.test'
+
 Twisted-like protocols (
 .......................
 mdht.
@@ -15,8 +23,6 @@ mdht.
     krpc_sender: sends krpc's
     krpc_responder: responds to krp's
     krpc_iterator: sends groups of queries and gathers their responses
-
-Run unit-tests with 'trial mdht.test'
 
 What is mdht_server?
 ------------------------
