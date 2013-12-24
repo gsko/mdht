@@ -1,9 +1,31 @@
-mdht
-====
+Comments, questions, and patches welcome: gsk067@gmail.com
 
-A library with protocols needed to run a Mainline DHT node (written with Twisted)
+What is mdht?
+-----------------------------------------------------------------------
+Status: (semi-stable) good unit tests, lacking functional tests
+-----------------------------------------------------------------------
+mdht is a library of kademlia protocols implemented with a twisted stack.
+mdht is designed to run on the current Mainline DHT of BitTorrent.
+(The protocol spec: http://www.bittorrent.org/beps/bep_0005.html)
 
-mdht is under heavy maintenance at the moment
+Twisted-like protocols (
+.......................
+mdht.
+  protocols.
+    krpc_sender: sends krpc's
+    krpc_responder: responds to krp's
+    krpc_iterator: sends groups of queries and gathers their responses
 
-Comments, questions, and patches welcome:
-gsk067@gmail.com
+Run unit-tests with 'trial mdht.test'
+
+What is mdht_server?
+------------------------
+Status: (experimental)
+------------------------
+mdht_server is a twisted (see 'twistd') application that starts up a simple mdht node that responds to KademliaRPC (KRPC) queries, along with an RPC server of its own that accepts 'mdht_client' requests.
+
+What is mdht_client?
+------------------------
+[Status: (experimental)]
+------------------------
+mdht_client is an RPC client that connects to an 'mdht_server' to request that the mdht node run specific queries (eg: you can perform a kademlia ping by calling mdht_client.ping("127.0.0.1:8000")
