@@ -1,5 +1,4 @@
 #!/usr/bin/env python2
-import os
 import pickle
 import sys
 
@@ -66,12 +65,23 @@ class RPC(xmlrpc.XMLRPC):
             .format(str(reply)))
         return err 
 
-    def xmlrpc_find_node(self, hostname_port, s_node_id):
+    def xmlrpc_find_node(self, hostname_portstr, s_node_id):
         node_id = self._deserialize(s_node_id)
-        log.msg('received find_node request for {0} '
-            'with target node id of {1}'.format(hostname_port, node_id))
-        hostname, port = hostname_port.split(":")
-        port = int(port)
+        log.msg('find_node(%s, %d)' % (hostname_portstr, node_id))
+        hostname, port_str = hostname_portstr.split(":")
+        port = int(port_str)
+        d = reactor.resolve(hostname)
+        d.addCallback(lambda ip:
+            self.kad_proto.find_node((ip, port), node_id))
+        d.addCallbacks(self._on_find_node_reply, self._on_find_node_err)
+        d.addBoth(self._serialize)
+        return d
+
+    def xmlrpc_get_peers(self, hostname_portstr, s_node_id):
+        node_id = self._deserialize(s_node_id)
+        log.msg('get_peers(%s, %d)' % (hostname_portstr, node_id))
+        hostname, port_str = hostname_portstr.split(":")
+        port = int(port_str)
         d = reactor.resolve(hostname)
         d.addCallback(lambda ip:
             self.kad_proto.find_node((ip, port), node_id))
@@ -80,23 +90,22 @@ class RPC(xmlrpc.XMLRPC):
         return d
 
     def _on_find_node_reply(self, reply):
-        log.msg('received find_node reply ({0})'.format(str(reply)))
+        log.msg('find_node reply ({0})'.format(str(reply)))
         return reply
 
     def _on_find_node_err(self, err):
-        log.err('find_node request processing caused an error ({0})'
+        log.err('find_node error ({0})'
             .format(str(err)))
-        os.exit(1)
+        sys.exit(1)
         return err
 
     def _on_ping_err(self, err):
-        log.err('ping request processing caused an error ({0})'
-            .format(str(err)))
-        os.exit(1)
+        log.err('ping error ({0})'.format(str(err)))
+        sys.exit(1)
         return err
 
     def _on_ping_reply(self, reply):
-        log.msg('received ping reply ({0})'.format(str(reply)))
+        log.msg('ping reply ({0})'.format(str(reply)))
         return reply
 
     def _serialize(self, val):
@@ -110,6 +119,3 @@ rpc_server = TCPServer(5000, web.server.Site(r))
 rpc_server.setServiceParent(app)
 
 application = app
-
-log.startLogging(sys.stdout)
-log.msg('%s running on localhost:%d', config.SERVER_PORT)

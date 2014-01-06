@@ -18,12 +18,12 @@ from mdht.kademlia.routing_table import TreeRoutingTable
 
 class KRPC_Responder(KRPC_Sender):
     def __init__(self,
-            routing_table_class=TreeRoutingTable,
+            routing_table_class=TreeRoutingTable,           
             node_id=None,
             _reactor=None):
 
         if node_id is None:
-            node_id = random.getrandbits(160)
+            node_id = random.getrandbits(constants.id_size)
 
         # Verify the node_id is valid
         basic_coder.encode_network_id(node_id)
@@ -102,8 +102,7 @@ class KRPC_Responder(KRPC_Sender):
         query.target_id = target_id
         return self.sendQuery(query, address, timeout)
 
-    def announce_peer(self, address, target_id, token, port, timeout=None):
-        timeout = timeout or constants.rpctimeout
+    def announce_peer(self, address, target_id, token, port, timeout=constants.rpctimeout):
         query = Query()
         query.rpctype = "announce_peer"
         query.target_id = target_id

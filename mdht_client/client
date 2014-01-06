@@ -14,22 +14,22 @@ class RPCClient(object):
     def __init__(self, addr_str='http://localhost:5000'):
         self.proxy = Proxy(addr_str)
 
-    def start_client(self):
+    def start_loop(self):
         reactor.run()
 
-    def stop_client(self):
-        reactor.stop()
-
     def ping(self, address_str):
-        log.msg('sending a kademlia ping query to {0}'.format(address_str))
+        log.msg('ping({0})'.format(address_str))
         return self._call('ping', address_str)
 
     def find_node(self, address_str, node_id):
-        log.msg('sending a kademlia find_node query '
-            'to {0} looking for a node id of {1}'
-            .format(address_str, node_id))
+        log.msg('find_node({0}, {1})'.format(address_str, node_id))
         s_node_id = self._serialize(node_id)
         return self._call('find_node', address_str, s_node_id)
+
+    def get_peers(self, address_str, node_id):
+        log.msg('get_peers({0}, {1})'.format(address_str, node_id))
+        s_node_id = self._serialize(node_id)
+        return self._call('get_peers', address_str, s_node_id)
 
     def find_iterate(self, target_id, nodes=None):
         log.msg('doing an iteration of kademlia find_node queries '
@@ -55,22 +55,14 @@ class RPCClient(object):
 
 
 if __name__ == "__main__":
-    address_str = 'weezy.us:1337'
-    import random
-    target_id = random.randint(0, 2**160)
-    rpc_client = RPCClient()
-    d = rpc_client.ping(address_str)
-    def find_node_on_responder(response):
-        rpc_client.find_node(address_str, response._from)
-    d.addCallback(find_node_on_responder)
-    #rpc_clent.find_node(address_str, target_id)
-    #rpc_client.ping(address_str)
-    #d = rpc_client.grab_nodes()
-    #d = d.addCallback(lambda nodes:
-    #    rpc_client.find_iterate(target_id, nodes))
-    #rpc_client.find_node(address_str, target_id)
+    log.startLogging(sys.stdout)
 
+    address_str = 'weezy.us:1337'
+    rpc_client = RPCClient()
+    # lone survivor, tpb: /9415944/Lone_Survivor_2013_DVDScr_x264_NO1KNOWS
+    lone_survivor = 0x982AE8129CEDABED2E8DD4735E3E00A0CE2E7509
+    rpc_client.ping(address_str)
+    rpc_client.get_peers(address_str, lone_survivor)
 
     # // TODO clean shutdown
-    log.startLogging(sys.stdout)
-    rpc_client.start_client()
+    rpc_client.start_loop()
