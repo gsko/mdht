@@ -1,0 +1,2 @@
+* remove _reactor as a parameter from the protocol constructors
+* rename protocols/ to krpc_protocols/ and rename all protocols/krpc_*.py to just protocols/*.py

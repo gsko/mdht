@@ -17,10 +17,8 @@ from mdht.protocols.krpc_sender import KRPC_Sender
 from mdht.kademlia.routing_table import TreeRoutingTable
 
 class KRPC_Responder(KRPC_Sender):
-    def __init__(self,
-            routing_table_class=TreeRoutingTable,           
-            node_id=None,
-            _reactor=None):
+    def __init__(self, routing_table_class=TreeRoutingTable,
+        node_id=None, _reactor=None):
 
         if node_id is None:
             node_id = random.getrandbits(constants.id_size)
