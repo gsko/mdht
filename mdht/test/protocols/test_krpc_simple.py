@@ -4,6 +4,7 @@ from twisted.internet import defer
 from mdht.protocols import krpc_simple
 
 TEST_NODE_ID = 5
+TEST_PORT = 10
 
 class KRPC_Simple_TestCase(unittest.TestCase):
     def setUp(self):
@@ -14,5 +15,5 @@ class KRPC_Simple_TestCase(unittest.TestCase):
         self.assertTrue(isinstance(d, defer.Deferred))
 
     def test_put_returnsDeferred(self):
-        d = self.ksimple.put(TEST_NODE_ID)
+        d = self.ksimple.put(TEST_NODE_ID, TEST_PORT)
         self.assertTrue(isinstance(d, defer.Deferred))

@@ -39,29 +39,27 @@ class KRPC_Responder(KRPC_Sender):
 
     def find_node_Received(self, query, address):
         target_node = self.routing_table.get_node(query.target_id)
-        # If we have the target node, return it
-        # otherwise return the nodes closest to the target ID
+        # Give them the node if we have it,
+        # otherwise give them the nodes closest to it
         if target_node is not None:
             nodes = [target_node]
         else:
             nodes = self.routing_table.get_closest_nodes(query.target_id)
-        # Include the nodes in the response
         response = query.build_response(nodes=nodes)
         self.sendResponse(response, address)
 
     def get_peers_Received(self, query, address):
+        # Give them the peers if we have them,
+        # otherwise, give them nodes
         nodes = None
-        peers = self._datastore.get(query.target_id) or list()
-        # Check if we have peers for the target infohash
-        # If we don't, return the closest nodes in our routing table instead
-        dont_have_peers = len(peers) == 0
-        if dont_have_peers:
+        peers = self._datastore.get(query.target_id)
+        have_peers = peers is not None and len(peers) > 0
+        if not have_peers:
             peers = None
             nodes = self.routing_table.get_closest_nodes(query.target_id)
-        # Generate a token that we can recalculate
-        # later (upon receiving an announce_peer query
+
+        # Generate a unique token for the response
         token = self._token_generator.generate(query, address)
-        # Attach the peers, nodes, and token to the response message
         response = query.build_response(nodes=nodes, peers=peers, token=token)
         self.sendResponse(response, address)
 
@@ -80,8 +78,9 @@ class KRPC_Responder(KRPC_Sender):
             response = query.build_response()
             self.sendResponse(response, address)
         else:
-            log.msg("Invalid token/query/querier combination in"
-                    " announce_peerReceived")
+            log.msg("announce_peerReceived: "
+                    "%s sent an announce_peer with an invalid token: %s".format(
+                        contact.address_str(address), str(token)))
 
     def ping(self, address, timeout=constants.rpctimeout):
         query = Query()
