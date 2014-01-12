@@ -32,8 +32,6 @@ class KRPC_Responder(KRPC_Sender):
         self._token_generator = _TokenGenerator()
 
     def ping_Received(self, query, address):
-        # The ping response needs no additional protocol
-        # data, so build_response() is empty
         response = query.build_response()
         self.sendResponse(response, address)
 
