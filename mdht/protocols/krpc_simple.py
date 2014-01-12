@@ -2,16 +2,19 @@ from mdht.protocols.krpc_iterator import KRPC_Iterator
 
 class LiveResult(object):
     def __init__(self):
-        pass
+        self.results = []
+        self.listeners = set()
 
     def add_results(self, results):
-        pass
+        self.results += list(results)
+        for listener in self.listeners:
+            listener()
 
     def get_results(self):
-        pass
+        return self.results
 
     def register_listener(self, listener):
-        pass
+        self.listeners.add(listener)
 
 
 class KRPC_Simple(KRPC_Iterator):
