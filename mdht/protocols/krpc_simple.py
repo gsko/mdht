@@ -48,11 +48,23 @@ class KRPC_Simple(KRPC_Iterator):
 
     def get(self, target_id):
         """
-        Return a LiveResult of peers
+        Return a LiveResult of (node, peers) pairs
+        for the torrent with an infohash of `target_id`
+
+        (node, peers) is the contact.Node that returned the corresponding peers
         """
         live_result = LiveResult()
         search_nodes = set(self.routing_table.get_closest_nodes(target_id))
 
+    def _get_peers_response_handler(self, response, live_result):
+        if responses.peers is not None:
+            pass
+        if response.nodes is not None:
+            pass
+
     def put(self, target_id, port):
+        """
+        Register this IP along with the given port
+        for the torrent with an infohash of `target_id`
+        """
         live_result = LiveResult()
-        pass

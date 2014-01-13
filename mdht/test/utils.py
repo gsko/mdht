@@ -1,10 +1,10 @@
-"""
-Various classes/functions commonly used in testing this package
-"""
+from mdht import contact
+
+_make_node = lambda x: contact.Node(x, ('127.0.0.1', x))
+test_nodes = [_make_node(x) for x in range(256)]
+
 class Clock(object):
     """
-    A drop in replacement for the time.time function
-
     >>> import time
     >>> time.time = Clock()
     >>> time.time()
@@ -13,7 +13,6 @@ class Clock(object):
     >>> time.time()
     5
     >>> 
-
     """
     def __init__(self):
         self._time = 0
@@ -44,7 +43,6 @@ class Counter(object):
     0
 
     The original method will also be called if it is supplied in the constructor
-
     """
     def __init__(self, orig_func=None):
         self.count = 0
@@ -88,8 +86,6 @@ class HollowTransport(object):
         sent = self.packet != None and self.address != None
         self._reset()
         return sent
-
-
 
 class HollowDelayedCall(object):
     def __init__(self):

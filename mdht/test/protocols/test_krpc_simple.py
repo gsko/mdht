@@ -1,7 +1,10 @@
 from twisted.trial import unittest
 from twisted.internet import defer
 
+from mdht.coding import krpc_coder
+from mdht.contact import Node
 from mdht.protocols.krpc_simple import LiveResult, LiveResultError, KRPC_Simple
+from mdht.test.utils import test_nodes, HollowTransport
 
 TEST_NODE_ID = 5
 TEST_PORT = 10
@@ -48,9 +51,51 @@ class LiveResult_TestCase(unittest.TestCase):
 class KRPC_Simple_TestCase(unittest.TestCase):
     def setUp(self):
         self.ksimple = KRPC_Simple(TEST_NODE_ID)
+        self.ksimple.transport = HollowTransport()
 
-    def test_get_returnsLiveResult_(self):
-        live_result = self.ksimple.get(TEST_NODE_ID)
+    def _grab_outbound_krpc(self):
+        krpc_msg = self.ksimple.transport.packet
+        krpc = krpc_coder.decode(krpc_msg)
+        return krpc
 
-    def test_put_returnsLiveResult(self):
-        live_result = self.ksimple.put(TEST_NODE_ID, TEST_PORT)
+    def test_get_liveResultGrowsWithSingleResponse(self):
+        # prepare proto for search
+        seed_node = test_nodes[0]
+        node_accepted = self.ksimple.routing_table.offer_node(seed_node)
+        self.assertTrue(node_accepted)
+
+        live_result = self.ksimple.get(890)
+        krpc = self._grab_outbound_krpc()
+        # any address tuple will do as a result_peer
+        result_peer = test_nodes[1].node_address
+        response = krpc.build_response(peers=[result_peer])
+        encoded_response = krpc_coder.encode(response)
+        responding_node = test_nodes[2]
+        self.ksimple.datagramReceived(
+            encoded_response, responding_node.node_addres)
+        results = live_result.get_results()
+        self.assertEquals(1, len(results))
+        expected_result = (responding_node, result_peer)
+        for result in results:
+            self.assertEquals(expected_result, result)
+            break
+
+    def test_get_liveResultDoesntGrowWithError(self):
+        # prepare proto for search
+        seed_node = test_nodes[0]
+        node_accepted = self.ksimple.routing_table.offer_node(seed_node)
+        self.assertTrue(node_accepted)
+
+        live_result = self.ksimple.get(890)
+        krpc = self._grab_outbound_krpc()
+        # any address tuple will do as a result_peer
+        error = krpc.build_error()
+        encoded_error = krpc_coder.encode(error)
+        responding_node = test_nodes[1]
+        self.ksimple.datagramReceived(
+            encoded_response, responding_node.node_addres)
+        results = live_result.get_results()
+        self.assertEquals(0, len(results))
+
+    def test_put(self):
+        self.assertTrue(False)
