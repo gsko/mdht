@@ -53,20 +53,20 @@ class KRPC_Simple_TestCase(unittest.TestCase):
         self.ksimple = KRPC_Simple(TEST_NODE_ID)
         self.ksimple.transport = HollowTransport()
 
-    def _grab_outbound_krpc(self):
-        krpc_msg = self.ksimple.transport.packet
-        self.assertNotEquals(None, krpc_msg)
-        krpc = krpc_coder.decode(krpc_msg)
-        return krpc
+    def _grab_outbound_get_peers(self):
+        encoded_query = self.ksimple.transport.packet
+        self.ksimple.transport._reset()
+        self.assertNotEquals(None, encoded_query)
+        query = krpc_coder.decode(encoded_query)
+        self.assertEquals("get_peers", query.rpctype)
+        return query 
 
     def test_get_liveResultGrowsWithSingleResponse(self):
         self._prepare_proto()
         
         live_result = self.ksimple.get(890)
-        krpc = self._grab_outbound_krpc()
-        # any address tuple will do as a result_peer
-        result_peer = test_nodes[1].node_address
-        response = krpc.build_response(peers=[result_peer])
+        query = self._grab_outbound_get_peers()
+        response = query.build_response(peers=[result_peer])
         self._encode_and_respond(response)
         results = live_result.get_results()
         self.assertEquals(1, len(results))
@@ -75,11 +75,23 @@ class KRPC_Simple_TestCase(unittest.TestCase):
             self.assertEquals(expected_result, result)
             break
 
+    def test_get_protoSendsAnotherGetPeersQueryOnResponseWithNodes(self):
+        self._prepare_proto()
+        
+        live_result = self.ksimple.get(890)
+        first_query = self._grab_outbound_get_peers()
+        # any address tuple will do as a result_peer
+        result_node = test_nodes[1]
+        response = krpc.build_response(nodes=[result_node])
+        self._encode_and_respond(response)
+        second_query = self._grab_outbound_get_peers()
+        self.assertNotEquals(second_query, first_query)
+
     def test_get_liveResultDoesntGrowWithError(self):
         self._prepare_proto()
 
         live_result = self.ksimple.get(890)
-        krpc = self._grab_outbound_krpc()
+        krpc = self._grab_outbound_get_peers()
         # any address tuple will do as a result_peer
         error = krpc.build_error()
         responding_node = self._encode_and_respond(error)

@@ -75,18 +75,6 @@ class HollowTransport(object):
         self.packet = None
         self.address = None
 
-    def _packet_was_sent(self):
-        """
-        Check whether a packet has been sent
-
-        In either case, reset the HollowTransport to appear as if
-        no packets have been sent
-
-        """
-        sent = self.packet != None and self.address != None
-        self._reset()
-        return sent
-
 class HollowDelayedCall(object):
     def __init__(self):
         self._active = True
