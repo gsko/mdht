@@ -71,5 +71,5 @@ class NodeTestCase(unittest.TestCase):
 class NodeCodingTestCase(unittest.TestCase):
     def test_address_str(self):
         address = ("127.0.0.1", 80)
-        expected_str = "ip=127.0.0.1 port=80"
+        expected_str = "127.0.0.1:80"
         self.assertEquals(expected_str, contact.address_str(address))
