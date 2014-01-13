@@ -55,24 +55,19 @@ class KRPC_Simple_TestCase(unittest.TestCase):
 
     def _grab_outbound_krpc(self):
         krpc_msg = self.ksimple.transport.packet
+        self.assertNotEquals(None, krpc_msg)
         krpc = krpc_coder.decode(krpc_msg)
         return krpc
 
     def test_get_liveResultGrowsWithSingleResponse(self):
-        # prepare proto for search
-        seed_node = test_nodes[0]
-        node_accepted = self.ksimple.routing_table.offer_node(seed_node)
-        self.assertTrue(node_accepted)
-
+        self._prepare_proto()
+        
         live_result = self.ksimple.get(890)
         krpc = self._grab_outbound_krpc()
         # any address tuple will do as a result_peer
         result_peer = test_nodes[1].node_address
         response = krpc.build_response(peers=[result_peer])
-        encoded_response = krpc_coder.encode(response)
-        responding_node = test_nodes[2]
-        self.ksimple.datagramReceived(
-            encoded_response, responding_node.node_addres)
+        self._encode_and_respond(response)
         results = live_result.get_results()
         self.assertEquals(1, len(results))
         expected_result = (responding_node, result_peer)
@@ -81,21 +76,29 @@ class KRPC_Simple_TestCase(unittest.TestCase):
             break
 
     def test_get_liveResultDoesntGrowWithError(self):
-        # prepare proto for search
-        seed_node = test_nodes[0]
-        node_accepted = self.ksimple.routing_table.offer_node(seed_node)
-        self.assertTrue(node_accepted)
+        self._prepare_proto()
 
         live_result = self.ksimple.get(890)
         krpc = self._grab_outbound_krpc()
         # any address tuple will do as a result_peer
         error = krpc.build_error()
-        encoded_error = krpc_coder.encode(error)
-        responding_node = test_nodes[1]
-        self.ksimple.datagramReceived(
-            encoded_response, responding_node.node_addres)
+        responding_node = self._encode_and_respond(error)
         results = live_result.get_results()
         self.assertEquals(0, len(results))
 
     def test_put(self):
         self.assertTrue(False)
+
+    def _encode_and_respond(self, krpc):
+        krpc._from = 123
+        encoded_krpc = krpc_coder.encode(krpc)
+        responding_node = test_nodes[22]
+        self.ksimple.datagramReceived(
+            encoded_krpc, responding_node.node_addres)
+        return responding_node
+
+    def _prepare_proto(self):
+        # prepare proto for search
+        seed_node = test_nodes[0]
+        node_accepted = self.ksimple.routing_table.offer_node(seed_node)
+        self.assertTrue(node_accepted)

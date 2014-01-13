@@ -27,6 +27,10 @@ class InvalidKRPCError(Exception):
     def __init__(self, invalid_message):
         self.invalid_message = invalid_message
 
+    def __repr__(self):
+        return "InvalidKRPCError({0})".format(self.invalid_message)
+    __str__ = __repr__
+
 def decode(packet):
     """
     Decode the raw network packet into a valid KRPC
@@ -39,7 +43,7 @@ def decode(packet):
     try:
         dpacket = _decode(packet)
     except (ValueError, KeyError, AttributeError, _ProtocolFormatError,
-            basic_coder.InvalidDataError, BTFailure):
+            basic_coder.InvalidDataError, BTFailure, TypeError):
         raise InvalidKRPCError(packet)
     else:
         return dpacket
