@@ -24,6 +24,9 @@ class KRPC_Sender(protocol.DatagramProtocol):
         self.node_id = long(node_id)
         self._transactions = dict()
         self.routing_table = routing_table_class(self.node_id)
+        # TODO rework the routing table classes: are multiple needed?, maybe
+        # one interface, one implementation, to leave room for the potential
+        # of making a direct-to-database implementation later?
 
     def datagramReceived(self, data, address):
         """
@@ -39,7 +42,8 @@ class KRPC_Sender(protocol.DatagramProtocol):
         try:
             krpc = krpc_coder.decode(data)
         except InvalidKRPCError:
-            log.msg("Malformed packet received from %s:%d" % address)
+            log.msg("{0}:{1} sent a malformed packet({2}) "
+                .format(address[0], address[1], data))
             return
         self.krpcReceived(krpc, address)
 

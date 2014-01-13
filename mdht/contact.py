@@ -141,14 +141,15 @@ class Node(object):
         return other.__hash__() ^ self.__hash__()
 
     def __repr__(self):
-        return "%s last_updated=%d successcount=%d failcount=%d" % (
+        # TODO readable timestamps in last_updated
+        return "%s last_updated=%d success=%d fail=%d" % (
                 self.__str__(), self.last_updated, self.successcount,
                 self.failcount)
 
     def __str__(self):
-        return "Node(id=%d, address=(%s))" % (
-            self.node_id, address_str(self.address))
+        return "Node(%s, %s)" % (
+            hex(self.node_id), address_str(self.address))
 
 def address_str(address):
-    return "ip=%s port=%d" % address
+    return "%s:%d" % address
 

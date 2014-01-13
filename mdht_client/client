@@ -5,6 +5,7 @@ import sys
 from twisted.web.xmlrpc import Proxy
 from twisted.internet import reactor
 from twisted.python import log
+log.startLogging(sys.stdout)
 
 def _print(x):
     print x
@@ -31,12 +32,10 @@ class RPCClient(object):
         s_node_id = self._serialize(node_id)
         return self._call('get_peers', address_str, s_node_id)
 
-    def find_iterate(self, target_id, nodes=None):
-        log.msg('doing an iteration of kademlia find_node queries '
-            'towards target ({0})'.format(target_id))
+    def get(self, target_id):
+        log.msg('get({0})'.format(target_id))
         s_target_id = self._serialize(target_id)
-        s_nodes = self._serialize(nodes)
-        return self._call('find_iterate', s_target_id, s_nodes)
+        return self._call('get', s_target_id)
 
     def grab_nodes(self):
         return self._call('grab_nodes')
@@ -48,6 +47,8 @@ class RPCClient(object):
         return pickle.dumps(val)
 
     def _call(self, funcname, *args, **kwargs):
+        # TODO refactor the above log.msg calls
+        # into this function here
         d = self.proxy.callRemote(funcname, *args, **kwargs)
         d.addBoth(self._deserialize)
         d.addBoth(_print)
@@ -55,14 +56,13 @@ class RPCClient(object):
 
 
 if __name__ == "__main__":
-    log.startLogging(sys.stdout)
-
     address_str = 'weezy.us:1337'
+    example = 0x982AE8129CEDABED2E8DD4735E3E00A0CE2E7509
     rpc_client = RPCClient()
-    # lone survivor, tpb: /9415944/Lone_Survivor_2013_DVDScr_x264_NO1KNOWS
-    lone_survivor = 0x982AE8129CEDABED2E8DD4735E3E00A0CE2E7509
     rpc_client.ping(address_str)
-    rpc_client.get_peers(address_str, lone_survivor)
+    rpc_client.find_node(address_str, example)
+    rpc_client.get_peers(address_str, example)
+    rpc_client.get(example)
 
     # // TODO clean shutdown
     rpc_client.start_loop()

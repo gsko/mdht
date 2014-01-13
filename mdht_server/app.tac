@@ -10,13 +10,13 @@ from twisted.python import log
 from twisted.web import xmlrpc
 from twisted.internet import reactor
 
-from mdht.protocols.krpc_iterator import KRPC_Iterator
+from mdht.protocols.krpc_simple import KRPC_Simple
 from mdht_server import config
 
 APPLICATION_NAME = "mdht_server"
 
 app = service.Application(APPLICATION_NAME)
-kad_proto = KRPC_Iterator()
+kad_proto = KRPC_Simple()
 kad_server = UDPServer(config.SERVER_PORT, kad_proto)
 kad_server.setServiceParent(app)
 
@@ -41,29 +41,10 @@ class RPC(xmlrpc.XMLRPC):
         port = int(port)
         d = reactor.resolve(hostname)
         d.addCallback(lambda ip: self.kad_proto.ping((ip, port)))
-        d.addCallbacks(self._on_ping_reply, self._on_ping_err)
+        d.addCallback(self._on_reply, "ping")
+        d.addErrback(self._on_err, "ping")
         d.addBoth(self._serialize)
         return d
-
-    def xmlrpc_find_iterate(self, s_target_id, s_nodes):
-        nodes = self._deserialize(s_nodes)
-        target_id = self._deserialize(s_target_id)
-        log.msg('received find_iterate request towards ({0}) '
-            'with nodes ({1})'.format(target_id, nodes))
-        d = self.kad_proto.find_iterate(target_id, nodes)
-        d.addCallbacks(
-            self._on_find_iterate_reply, self._on_find_iterate_err)
-        d.addBoth(self._serialize)
-        return d
-
-    def _on_find_iterate_reply(self, reply):
-        log.msg('received find_iterate reply ({0})'.format(str(reply)))
-        return reply
-
-    def _on_find_iterate_err(self, err):
-        log.msg('find_iterate request processing caused an error ({0})'
-            .format(str(reply)))
-        return err 
 
     def xmlrpc_find_node(self, hostname_portstr, s_node_id):
         node_id = self._deserialize(s_node_id)
@@ -73,7 +54,8 @@ class RPC(xmlrpc.XMLRPC):
         d = reactor.resolve(hostname)
         d.addCallback(lambda ip:
             self.kad_proto.find_node((ip, port), node_id))
-        d.addCallbacks(self._on_find_node_reply, self._on_find_node_err)
+        d.addCallback(self._on_reply, "find_node")
+        d.addErrback(self._on_err, "find_node")
         d.addBoth(self._serialize)
         return d
 
@@ -85,28 +67,42 @@ class RPC(xmlrpc.XMLRPC):
         d = reactor.resolve(hostname)
         d.addCallback(lambda ip:
             self.kad_proto.find_node((ip, port), node_id))
-        d.addCallbacks(self._on_find_node_reply, self._on_find_node_err)
+        d.addCallback(self._on_reply, "get_peers")
+        d.addErrback(self._on_err, "get_peers")
         d.addBoth(self._serialize)
         return d
 
-    def _on_find_node_reply(self, reply):
-        log.msg('find_node reply ({0})'.format(str(reply)))
+    class SearchListener(object):
+        def __init__(self, live_search, deferred):
+            self.live_search = live_search
+            self.deferred = deferred
+
+        def __call__(self):
+            log.msg('live_search({0}) is complete!'
+                .format(live_search.target_id))
+            deferred.callback(live_search.get_results())
+
+    def xmlrpc_get(self, s_target_id):
+        target_id = self._deserialize(s_target_id)
+        log.msg('get({0})'.format(target_id))
+        live_search = self.kad_proto.get(target_id)
+        d = Deferred()
+        d.addCallback(self._on_reply, "get")
+        d.addErrback(self._on_err, "get")
+        d.addBoth(self._serialize)
+        live_search.register_listener(SearchListener(live_search, deferred))
+        # TODO -- bug: some problem with deserialization on an instance
+        # rather than a str
+        return d
+
+    def _on_reply(self, reply, func_str):
+        log.msg('{0} reply ({1})'.format(func_str, str(reply)))
         return reply
 
-    def _on_find_node_err(self, err):
-        log.err('find_node error ({0})'
-            .format(str(err)))
+    def _on_err(self, err, func_str):
+        log.err('{0} error ({1})'.format(func_str, str(err)))
         sys.exit(1)
         return err
-
-    def _on_ping_err(self, err):
-        log.err('ping error ({0})'.format(str(err)))
-        sys.exit(1)
-        return err
-
-    def _on_ping_reply(self, reply):
-        log.msg('ping reply ({0})'.format(str(reply)))
-        return reply
 
     def _serialize(self, val):
         return pickle.dumps(val)

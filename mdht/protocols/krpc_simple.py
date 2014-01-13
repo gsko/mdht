@@ -49,7 +49,9 @@ class LiveSearch(object):
 class KRPC_Simple(KRPC_Iterator):
     def __init__(self, node_id=None):
         KRPC_Iterator.__init__(self, node_id)
-        # TODO token gathering and cache
+        # TODO KRPCSimple should bootstrap itself
+        # -- this will require reworking of many of the krpc_simple tests
+        # TODO token gathering
 
     def get(self, target_id):
         """
