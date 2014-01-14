@@ -63,6 +63,10 @@ class KRPC_Simple(KRPC_Iterator):
         live_search = LiveSearch(target_id)
         search_nodes = set(self.routing_table.get_closest_nodes(target_id))
         if len(search_nodes) == 0:
+            # TODO bug
+            # mark_completed won't call the listener
+            # that the user registers because
+            # the livesearch hadn't been completed yet
             live_search.mark_completed()
         else:
             self._get_iterate(search_nodes, live_search)

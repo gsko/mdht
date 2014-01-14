@@ -24,11 +24,12 @@ class InvalidKRPCError(Exception):
         the error
 
     """
-    def __init__(self, invalid_message):
+    def __init__(self, invalid_message, exception):
         self.invalid_message = invalid_message
+        self.exception = exception
 
     def __repr__(self):
-        return "InvalidKRPCError({0})".format(self.invalid_message)
+        return "InvalidKRPCError({0}, {1})".format(self.invalid_message, str(self.exception))
     __str__ = __repr__
 
 def decode(packet):
@@ -40,13 +41,14 @@ def decode(packet):
     @raises InvalidKRPCError if the given packet is invalid
 
    """
-    try:
-        dpacket = _decode(packet)
-    except (ValueError, KeyError, AttributeError, _ProtocolFormatError,
-            basic_coder.InvalidDataError, BTFailure, TypeError):
-        raise InvalidKRPCError(packet)
-    else:
-        return dpacket
+    #try:
+    dpacket = _decode(packet)
+    return dpacket
+#    except (ValueError, KeyError, AttributeError, _ProtocolFormatError,
+#            basic_coder.InvalidDataError, BTFailure, TypeError) as e:
+#        raise InvalidKRPCError(packet, e)
+#    else:
+#        return dpacket
 
 def encode(message):
     """
@@ -57,13 +59,14 @@ def encode(message):
     @raises InvalidKRPCError if the given krpc object is invalid
 
     """
-    try:
-        packet = _encode(message)
-    except (ValueError, KeyError, AttributeError, _ProtocolFormatError,
-            basic_coder.InvalidDataError, TypeError, BTFailure):
-        raise InvalidKRPCError(message)
-    else:
-        return packet
+    #try:
+    packet = _encode(message)
+    return packet
+#    except (ValueError, KeyError, AttributeError, _ProtocolFormatError,
+#            basic_coder.InvalidDataError, TypeError, BTFailure):
+#        raise InvalidKRPCError(message)
+#    else:
+        #return packet
 
 ##
 ## Private encoding / decoding helper functions
@@ -150,13 +153,13 @@ def _response_decoder(rpc_dict):
     return r
 
 def _decode_addresses(address_string):
-    """Decode a concatenated address string into a list of addres tuples"""
+    """Decode a concatenated address string into a list of address tuples"""
     addresses = []
     # Each address string has a length of 6
     encoded_addresses = _chunkify(address_string, 6)
     for address_string in encoded_addresses:
-        decoded_peer = basic_coder.decode_address(address_string)
-        addresses.append(decoded_peer)
+        address = basic_coder.decode_address(address_string)
+        addresses.append(address)
     return addresses 
 
 def _decode_nodes(node_string):

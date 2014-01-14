@@ -5,10 +5,11 @@ import sys
 from twisted import web
 from twisted.application import internet, service
 from twisted.application.internet import UDPServer, TCPServer
+from twisted.internet.defer import Deferred
 from twisted.internet.protocol import Factory, Protocol
+from twisted.internet import reactor
 from twisted.python import log
 from twisted.web import xmlrpc
-from twisted.internet import reactor
 
 from mdht.protocols.krpc_simple import KRPC_Simple
 from mdht_server import config
@@ -19,6 +20,17 @@ app = service.Application(APPLICATION_NAME)
 kad_proto = KRPC_Simple()
 kad_server = UDPServer(config.SERVER_PORT, kad_proto)
 kad_server.setServiceParent(app)
+
+class SearchListener(object):
+    def __init__(self, live_search, deferred):
+        self.live_search = live_search
+        self.deferred = deferred
+
+    def __call__(self):
+        log.msg('live_search({0}) is complete!'
+            .format(live_search.target_id))
+        self.deferred.callback(live_search.get_results())
+
 
 class RPC(xmlrpc.XMLRPC):
 
@@ -72,16 +84,6 @@ class RPC(xmlrpc.XMLRPC):
         d.addBoth(self._serialize)
         return d
 
-    class SearchListener(object):
-        def __init__(self, live_search, deferred):
-            self.live_search = live_search
-            self.deferred = deferred
-
-        def __call__(self):
-            log.msg('live_search({0}) is complete!'
-                .format(live_search.target_id))
-            deferred.callback(live_search.get_results())
-
     def xmlrpc_get(self, s_target_id):
         target_id = self._deserialize(s_target_id)
         log.msg('get({0})'.format(target_id))
@@ -90,7 +92,8 @@ class RPC(xmlrpc.XMLRPC):
         d.addCallback(self._on_reply, "get")
         d.addErrback(self._on_err, "get")
         d.addBoth(self._serialize)
-        live_search.register_listener(SearchListener(live_search, deferred))
+        live_search.register_listener(SearchListener(live_search, d))
+        assert not live_search.is_complete
         # TODO -- bug: some problem with deserialization on an instance
         # rather than a str
         return d

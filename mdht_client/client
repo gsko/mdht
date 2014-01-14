@@ -1,68 +1,63 @@
 #!/usr/bin/env python2
-import pickle
+import random
 import sys
 
-from twisted.web.xmlrpc import Proxy
-from twisted.internet import reactor
 from twisted.python import log
+from twisted.internet import defer
+
+from mdht_client.client_lib import RPCClient
 log.startLogging(sys.stdout)
 
-def _print(x):
-    print x
-    return x
+def rand_id():
+    return random.getrandbits(160)
 
-class RPCClient(object):
-    def __init__(self, addr_str='http://localhost:5000'):
-        self.proxy = Proxy(addr_str)
+class ResponseCounter(object):
+    def __init__(self, num_responses, deferred):
+        self.deferred = deferred
+        self.num_responses = num_responses
+        self._done = False
 
-    def start_loop(self):
-        reactor.run()
+    def __call__(self, _ign):
+        if not self._done:
+            self.num_responses -= 1
+            if self.num_responses <= 0:
+                self._done = True
+                self.deferred.callback(True)
+        return _ign
 
-    def ping(self, address_str):
-        log.msg('ping({0})'.format(address_str))
-        return self._call('ping', address_str)
+def bootstrap(address_str):
+    rpc_client.ping(address_str)
+    deferred = defer.Deferred()
 
-    def find_node(self, address_str, node_id):
-        log.msg('find_node({0}, {1})'.format(address_str, node_id))
-        s_node_id = self._serialize(node_id)
-        return self._call('find_node', address_str, s_node_id)
+    def _on_reply(response):
+        response_nodes = set(response.nodes)
+        response_counter = ResponseCounter(len(set(response_nodes)), deferred)
+        for node in response_nodes:
+            d = rpc_client.get_peers("%s:%d" % node.address, rand_id())
+            d.addBoth(response_counter)
 
-    def get_peers(self, address_str, node_id):
-        log.msg('get_peers({0}, {1})'.format(address_str, node_id))
-        s_node_id = self._serialize(node_id)
-        return self._call('get_peers', address_str, s_node_id)
+    def _on_error(error):
+        log.err('Couldn\'t bootstrap because we received no nodes from our one bootstrap address')
+        sys.exit(1)
 
-    def get(self, target_id):
-        log.msg('get({0})'.format(target_id))
-        s_target_id = self._serialize(target_id)
-        return self._call('get', s_target_id)
+    d = rpc_client.find_node(address_str, rand_id())
+    d.addCallback(_on_reply)
+    d.addErrback(_on_error)
 
-    def grab_nodes(self):
-        return self._call('grab_nodes')
-
-    def _deserialize(self, serial_val):
-        return pickle.loads(serial_val)
-
-    def _serialize(self, val):
-        return pickle.dumps(val)
-
-    def _call(self, funcname, *args, **kwargs):
-        # TODO refactor the above log.msg calls
-        # into this function here
-        d = self.proxy.callRemote(funcname, *args, **kwargs)
-        d.addBoth(self._deserialize)
-        d.addBoth(_print)
-        return d
-
+    return deferred
 
 if __name__ == "__main__":
     address_str = 'weezy.us:1337'
     example = 0x982AE8129CEDABED2E8DD4735E3E00A0CE2E7509
     rpc_client = RPCClient()
-    rpc_client.ping(address_str)
-    rpc_client.find_node(address_str, example)
-    rpc_client.get_peers(address_str, example)
+    # TODO make this a proper deferred function of krpc_simple
+    #d = bootstrap(address_str)
+    #rpc_client.ping(address_str)
+    #rpc_client.find_node(address_str, example)
+    #rpc_client.get_peers(address_str, example)
+    #rpc_client.grab_nodes()
     rpc_client.get(example)
+    #d.addCallback(lambda _ign: rpc_client.get(example))
 
     # // TODO clean shutdown
     rpc_client.start_loop()

@@ -42,8 +42,8 @@ class KRPC_Sender(protocol.DatagramProtocol):
         try:
             krpc = krpc_coder.decode(data)
         except InvalidKRPCError:
-            log.msg("{0}:{1} sent a malformed packet({2}) "
-                .format(address[0], address[1], data))
+            log.msg("{0}:{1} sent a malformed packet"
+                .format(address[0], address[1]))
             return
         self.krpcReceived(krpc, address)
 
@@ -116,11 +116,11 @@ class KRPC_Sender(protocol.DatagramProtocol):
         """
         # Pull the node corresponding to this response out
         # of our routing table, or create it if it doesn't exist
-        rt_node = self.routing_table.get_node(response._from)
-        responsenode = (rt_node if rt_node is not None
-                        else contact.Node(response._from, address))
-        responsenode.successful_query(transaction.time)
-        self.routing_table.offer_node(responsenode)
+        response_node = self.routing_table.get_node(response._from)
+        if response_node is None:
+            response_node = contact.Node(response._from, address)
+        response_node.successful_query(transaction.time)
+        self.routing_table.offer_node(response_node)
         # Pass the response further down the callback chain
         return response
 
