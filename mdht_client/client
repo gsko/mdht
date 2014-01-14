@@ -29,6 +29,7 @@ def bootstrap(address_str):
     rpc_client.ping(address_str)
     deferred = defer.Deferred()
 
+    # TODO just use a DeferredList()
     def _on_reply(response):
         response_nodes = set(response.nodes)
         response_counter = ResponseCounter(len(set(response_nodes)), deferred)
