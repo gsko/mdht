@@ -1,3 +1,4 @@
 #!/bin/sh
+# TODO better logfile name
 DATE=`date +%d_%b_%Y`
 twistd --logfile=$DATE"_mdht_server.log" -noy app.tac
