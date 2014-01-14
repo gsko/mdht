@@ -31,6 +31,8 @@ class SearchListener(object):
             .format(live_search.target_id))
         self.deferred.callback(live_search.get_results())
 
+# TODO
+# basic persistence (sqlite)
 
 class RPC(xmlrpc.XMLRPC):
 
