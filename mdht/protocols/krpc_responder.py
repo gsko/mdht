@@ -77,8 +77,8 @@ class KRPC_Responder(KRPC_Sender):
             self.sendResponse(response, address)
         else:
             log.msg("announce_peerReceived: "
-                    "%s sent an announce_peer with an invalid token: %s".format(
-                        contact.address_str(address), str(token)))
+                    "{0} sent an announce_peer with an invalid token: {1}".format(
+                    contact.address_str(address), str(token)))
 
     def ping(self, address, timeout=constants.rpctimeout):
         query = Query()
