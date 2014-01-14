@@ -1,38 +1,35 @@
 Comments, questions, and patches welcome: gsk067@gmail.com
 
-Requirements
-============
+** Requirements
 * Python 2.7.x
-* Twisted (a newer version is probably better)
+* Twisted (a recent version)
 
-What is mdht?
-=======================================================================
-Status: (semi-stable) good unit tests, lacking functional tests
-=======================================================================
-mdht is a library of kademlia protocols implemented with a twisted stack.
-mdht is designed to run on the current Mainline DHT of BitTorrent.
-(The protocol spec: http://www.bittorrent.org/beps/bep_0005.html)
+mdht ===========================================================================
+A library with implementations of a kademlia node supporting "Mainline DHT".
+Written on a Twisted stack.
+Protocol spec: http://www.bittorrent.org/beps/bep_0005.html)
 
-Unit tests
-----------
+Unit tests -----
 On a shell with a proper PYTHONPATH, do: 'trial mdht.test'
 
-Twisted-like protocols (
------------------------
-mdht.
-  protocols.
-    krpc_sender: sends krpc's
-    krpc_responder: responds to krp's
-    krpc_iterator: sends groups of queries and gathers their responses
+Protocols ------
+mdht.protocols.krpc_simple:
+    "get" and "put" operations
 
-What is mdht_server?
-========================
-Status: (experimental)
-========================
-mdht_server is a twisted (see 'twistd') application that starts up a simple mdht node that responds to KademliaRPC (KRPC) queries, along with an RPC server of its own that accepts 'mdht_client' requests.
+mdht_server ====================================================================
+A Twisted application that starts up a server with an mdht node and rpc.
+Please see the source of mdht_server/app.tac and mdht_server/server.
 
-What is mdht_client?
-========================
-[Status: (experimental)]
-========================
-mdht_client is an RPC client that connects to an 'mdht_server' to request that the mdht node run specific queries (eg: you can perform a kademlia ping by calling mdht_client.ping("127.0.0.1:8000")
+# To run
+    cd mdht_server
+    chmod +x server
+    ./server
+
+mdht_client ====================================================================
+An RPC client that connects to an mdht_server.
+Please see the source of mdht_client/client.
+
+# To run
+    cd mdht_client
+    chmod +x client
+    ./client
