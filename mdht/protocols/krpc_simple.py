@@ -53,6 +53,8 @@ class KRPC_Simple(KRPC_Iterator):
         # -- this will require reworking of many of the krpc_simple tests
         # TODO token gathering
 
+    # TODO add num_peers as an argument to limit the search
+    # TODO add filtering to the get_peers replies
     def get(self, target_id):
         """
         Return a LiveSearch of (node, peers) pairs
@@ -77,6 +79,7 @@ class KRPC_Simple(KRPC_Iterator):
         Register this IP along with the given port
         for the torrent with an infohash of `target_id`
         """
+        # TODO count the number of announce_peer ack's we get?
         pass
 
     def _get_iterate(self, nodes, live_search):

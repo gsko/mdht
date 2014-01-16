@@ -7,6 +7,8 @@ originating from and destined to the DHT network
 @see mdht.krpc_types for the representation of KRPCs used by mdht
 
 """
+from twisted.python import log
+
 from mdht import contact
 from mdht.coding import basic_coder
 from mdht.coding.bencode import bdecode, bencode, BTFailure
@@ -24,12 +26,12 @@ class InvalidKRPCError(Exception):
         the error
 
     """
-    def __init__(self, invalid_message, exception):
+    def __init__(self, invalid_message):
         self.invalid_message = invalid_message
-        self.exception = exception
 
     def __repr__(self):
-        return "InvalidKRPCError({0}, {1})".format(self.invalid_message, str(self.exception))
+        return "InvalidKRPCError({0})".format(self.invalid_message)
+
     __str__ = __repr__
 
 def decode(packet):
@@ -41,14 +43,16 @@ def decode(packet):
     @raises InvalidKRPCError if the given packet is invalid
 
    """
-    #try:
-    dpacket = _decode(packet)
-    return dpacket
-#    except (ValueError, KeyError, AttributeError, _ProtocolFormatError,
-#            basic_coder.InvalidDataError, BTFailure, TypeError) as e:
-#        raise InvalidKRPCError(packet, e)
-#    else:
-#        return dpacket
+   # TODO better error logging
+    try:
+        dpacket = _decode(packet)
+        return dpacket
+    except IndexError:#(ValueError, KeyError, AttributeError, _ProtocolFormatError,
+            #basic_coder.InvalidDataError, BTFailure, TypeError) as e:
+        log.err("Caught an exception: {0}".format(repr(e)))
+        raise InvalidKRPCError(packet)
+    else:
+        return dpacket
 
 def encode(message):
     """
@@ -59,14 +63,14 @@ def encode(message):
     @raises InvalidKRPCError if the given krpc object is invalid
 
     """
-    #try:
-    packet = _encode(message)
-    return packet
-#    except (ValueError, KeyError, AttributeError, _ProtocolFormatError,
-#            basic_coder.InvalidDataError, TypeError, BTFailure):
-#        raise InvalidKRPCError(message)
-#    else:
-        #return packet
+    try:
+        packet = _encode(message)
+        return packet
+    except (ValueError, KeyError, AttributeError, _ProtocolFormatError,
+            basic_coder.InvalidDataError, TypeError, BTFailure):
+        raise InvalidKRPCError(message)
+    else:
+        return packet
 
 ##
 ## Private encoding / decoding helper functions
@@ -146,21 +150,18 @@ def _response_decoder(rpc_dict):
         r.nodes = _decode_nodes(rpc_dict['r']['nodes'])
     # get_peers always returns a list of peers
     if 'values' in rpc_dict['r']:
+        print "\n\n\n"
+        print rpc_dict['r']['values']
+        print "\n\n\n"
         r.peers = _decode_addresses(rpc_dict['r']['values'])
     # get_peers returns a token
     if 'token' in rpc_dict['r']:
         r.token = basic_coder.btol(rpc_dict['r']['token'])
     return r
 
-def _decode_addresses(address_string):
-    """Decode a concatenated address string into a list of address tuples"""
-    addresses = []
+def _decode_addresses(address_strs):
     # Each address string has a length of 6
-    encoded_addresses = _chunkify(address_string, 6)
-    for address_string in encoded_addresses:
-        address = basic_coder.decode_address(address_string)
-        addresses.append(address)
-    return addresses 
+    return map(basic_coder.decode_address, address_strs)
 
 def _decode_nodes(node_string):
     """Decode a concatenated node string into a list of nodes"""
@@ -250,9 +251,8 @@ def _response_encoder(response):
         encoded_nodes = [contact.encode_node(node) for node in response.nodes]
         resp_dict['r']['nodes'] = "".join(encoded_nodes)
     if response.peers is not None:
-        encoded_peers = [basic_coder.encode_address(peer)
-                            for peer in response.peers]
-        resp_dict['r']['values'] = "".join(encoded_peers)
+        encoded_peers = map(basic_coder.encode_address, response.peers)
+        resp_dict['r']['values'] = encoded_peers
     if response.token is not None:
         resp_dict['r']['token'] = basic_coder.ltob(response.token)
     return resp_dict

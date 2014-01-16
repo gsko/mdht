@@ -9,30 +9,6 @@ from mdht.contact import Node
 
 encode_and_decode = lambda krpc: decode(encode(krpc))
 
-class KRPCHelperFunctionTestCase(unittest.TestCase):
-    def test_chunkify_nodestrings(self):
-        # Node strings are of length 26
-        node_string = "01" * 13
-        node_strings = node_string * 10
-        # _chunkify returns a generator
-        split_node_strings = _chunkify(node_strings, 26)
-        self.assertEquals(10, len(list(split_node_strings)))
-
-    def test_chunkify_peerstrings(self):
-        # Addresses are of length 6
-        address_string = "012345"
-        address_strings = address_string * 10
-        # _chunkify returns a generator
-        split_address_strings = _chunkify(address_strings, 6)
-        self.assertEquals(10, len(list(split_address_strings)))
-
-    def test_decode_addresses(self):
-        address_string = "".join(["\x00\x00\x00\x00\x00\x00",
-                                 "\xff\xff\xff\xff\xff\xff"])
-        addresses = _decode_addresses(address_string)
-        self.assertEquals(("0.0.0.0", 0), addresses[0])
-        self.assertEquals(("255.255.255.255", 65535), addresses[1])
-
 class QueryCodingTestCase(unittest.TestCase):
 
     test_target_id = 551232
@@ -137,12 +113,7 @@ class ResponseCodingTestCase(unittest.TestCase):
         r.token = 90831
         r.peers = [("127.0.0.1", 80), ("4.2.2.1", 8905), ("0.0.0.0", 0),
                     ("255.255.255.255", 65535), ("8.8.8.8", 53)]
-        expected_encoding = (
-                'd1:rd2:id20:\x00\x00\x00\x00\x00\x00\x08U{fDA\xb0\x88\xe6' +
-                '\x8a\xec\xf8\xe2{5:token3:\x01b\xcf6:values30:\x7f\x00\x00' +
-                '\x01\x00P\x04\x02\x02\x01"\xc9\x00\x00\x00\x00\x00\x00\xff' +
-                '\xff\xff\xff\xff\xff\x08\x08\x08\x08\x005e1:t6:\x01\xbbH' + 
-                '\xb4\xbc\x1c1:y1:re')
+        expected_encoding = 'd1:rd2:id20:\x00\x00\x00\x00\x00\x00\x08U{fDA\xb0\x88\xe6\x8a\xec\xf8\xe2{5:token3:\x01b\xcf6:valuesl6:\x7f\x00\x00\x01\x00P6:\x04\x02\x02\x01"\xc96:\x00\x00\x00\x00\x00\x006:\xff\xff\xff\xff\xff\xff6:\x08\x08\x08\x08\x005ee1:t6:\x01\xbbH\xb4\xbc\x1c1:y1:re'
         encoding = encode(r)
         self.assertEquals(expected_encoding, encoding)
 
@@ -164,12 +135,13 @@ class ResponseCodingTestCase(unittest.TestCase):
         r._transaction_id = 1903890316316
         r._from = 169031860931900138093217073128059
         r.token = 90831
-        r.nodes = []
-        r.nodes.append(Node(2**158, ("127.0.0.1", 890)))
-        r.nodes.append(Node(2**15, ("127.0.0.1", 8890)))
-        r.nodes.append(Node(2**128, ("127.0.0.1", 1890)))
-        r.nodes.append(Node(2**59, ("127.0.0.1", 7890)))
-        r.nodes.append(Node(2**153, ("127.0.0.1", 5830)))
+        r.nodes = [
+            Node(2**158, ("127.0.0.1", 890)),
+            Node(2**15, ("127.0.0.1", 8890)),
+            Node(2**128, ("127.0.0.1", 1890)),
+            Node(2**59, ("127.0.0.1", 7890)),
+            Node(2**153, ("127.0.0.1", 5830))
+        ]
         expected_encoding = ('d1:rd2:id20:\x00\x00\x00\x00\x00\x00\x08' +
                 'U{fDA\xb0\x88\xe6\x8a\xec\xf8\xe2{5:nodes130:@\x00\x00\x00' +
                 '\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00' +

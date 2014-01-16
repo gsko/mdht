@@ -109,9 +109,9 @@ class KRPC_Simple_TestCase(unittest.TestCase):
         self.assertTrue(False)
 
     def _encode_and_respond(self, krpc):
-        krpc._from = 123
-        encoded_krpc = krpc_coder.encode(krpc)
         responding_node = test_nodes[22]
+        krpc._from = responding_node.node_id
+        encoded_krpc = krpc_coder.encode(krpc)
         self.ksimple.datagramReceived(encoded_krpc, responding_node.address)
         return responding_node
 

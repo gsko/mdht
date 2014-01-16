@@ -1,7 +1,7 @@
 from mdht import contact
 
 _make_node = lambda x: contact.Node(x, ('127.0.0.1', x))
-test_nodes = [_make_node(x) for x in range(256)]
+test_nodes = [_make_node(x) for x in range(1, 256)]
 
 class Clock(object):
     """
@@ -58,20 +58,16 @@ class Counter(object):
 
 class HollowTransport(object):
     def __init__(self):
-        self.packet = None
-        self.address = None
+        self._reset()
 
     def write(self, packet, address):
         """
-        Remember what packet and address was passed into write and do nothing
+        Remember the last outbound packet and address
         """
         self.packet = packet
         self.address = address
 
     def _reset(self):
-        """
-        Resets the HollowTransport so that it appears as if no packet was sent
-        """
         self.packet = None
         self.address = None
 

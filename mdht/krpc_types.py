@@ -62,7 +62,7 @@ class Query(_KRPC):
     """
     def __init__(self, _transaction_id=None, rpctype=None,
             _from=None, target_id=None, token=None, port=None):
-        _KRPC.__init__(self, _transaction_id=None)
+        _KRPC.__init__(self, _transaction_id)
         self.rpctype = rpctype
         self._from = _from
         self.target_id = target_id

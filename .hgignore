@@ -4,6 +4,6 @@ syntax: glob
 *.pyo
 *.swp
 *.cache
-.idea/*
 .project
-.pydevproject
+*.log.*
+*.log
