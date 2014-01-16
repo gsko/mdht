@@ -150,9 +150,6 @@ def _response_decoder(rpc_dict):
         r.nodes = _decode_nodes(rpc_dict['r']['nodes'])
     # get_peers always returns a list of peers
     if 'values' in rpc_dict['r']:
-        print "\n\n\n"
-        print rpc_dict['r']['values']
-        print "\n\n\n"
         r.peers = _decode_addresses(rpc_dict['r']['values'])
     # get_peers returns a token
     if 'token' in rpc_dict['r']:
